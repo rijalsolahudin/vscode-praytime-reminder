@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PrayTime Reminder</title>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src https: data:; style-src 'unsafe-inline' https:; script-src 'unsafe-inline' https:;">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+  <style>
+    html, body { height: 100%; width: 100%; }
+    body {
+      font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      background-image: url('https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=1500&q=80');
+      background-size: cover;
+      background-position: center;
+      min-height: 100vh;
+      min-width: 100vw;
+    }
+    .overlay { background: rgba(24,24,27,0.7); position: fixed; inset: 0; z-index: 0; }
+    .glass {
+      border-radius: 1.5rem;
+    }
+    .prayer-icon {
+      width: 1.25em;
+      margin-right: 0.5em;
+      opacity: 0.85;
+    }
+    .clock-animate {
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0% { text-shadow: 0 0 0px #fff; }
+      50% { text-shadow: 0 0 12px #60a5fa, 0 0 24px #fff; }
+      100% { text-shadow: 0 0 0px #fff; }
+    }
+  </style>
+</head>
+<body class="min-h-screen w-full flex flex-col relative">
+  <div class="overlay"></div>
+  <div class="relative z-10 flex flex-col items-center w-full min-h-screen">
+    <!-- Kutipan ayat, sembunyikan di mobile -->
+    <div class="hidden md:flex flex-col items-center mt-12 md:mt-32 px-4">
+      <div class="text-xl md:text-3xl text-white font-bold mb-2 text-center">إِنَّ ٱلصَّلَوٰةَ كَانَتْ عَلَى ٱلْمُؤْمِنِينَ كِتَٰبًۭا مَّوْقُوتًۭا</div>
+      <div class="text-base md:text-xl text-white mb-1 text-center">Sesungguhnya shalat itu adalah fardhu yang ditentukan waktunya atas orang-orang yang beriman.</div>
+      <div class="text-xs md:text-sm text-gray-300 text-center mb-6">QS. An-Nisa: 103</div>
+    </div>
+    <!-- Konten utama responsif -->
+    <div class="flex flex-col md:flex-row items-center justify-center w-full max-w-4xl mx-auto gap-8 md:gap-16 px-4 py-8 md:py-16">
+      <!-- Bagian jam dan info lokasi -->
+      <div class="w-full md:w-1/2 flex flex-col items-start bg-black/30 rounded-2xl p-6 md:p-8 mb-6 md:mb-0 shadow-lg">
+        <div class="mb-4 md:mb-6 w-full">
+          <div id="clock" class="text-5xl md:text-[78px] font-extrabold text-white text-left leading-tight"></div>
+          <div class="text-sm md:text-base text-white/90 text-left font-semibold mt-2 md:mt-3 flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="4"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+            Senin, 30 Juni 2025
+          </div>
+          <div class="text-sm md:text-base text-white text-left font-medium flex items-center gap-2 mt-1">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3A7 7 0 0 0 21 12.79z"/></svg>
+            3 Muharram 1447 H
+          </div>
+          <div class="text-sm md:text-base text-white text-left flex items-center gap-2 mt-1">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5z"/></svg>
+            Jakarta, Indonesia
+          </div>
+        </div>
+      </div>
+      <!-- Bagian jadwal sholat -->
+      <div class="w-full md:w-1/2 max-w-md bg-black/30 rounded-2xl p-6 md:p-8 shadow-lg">
+        <div class="font-bold text-xs md:text-sm mb-2 text-left tracking-wide text-white leading-tight">Jadwal sholat hari ini :</div>
+        <div class="flex flex-col gap-2.5">
+          <div class="flex flex-col bg-green-500/30 rounded-lg px-2 py-1">
+            <div class="flex justify-between items-center text-base font-semibold leading-tight">
+              <span class="flex items-center gap-2">
+                <!-- Subuh: Fajar (Sunrise) -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2"><path d="M12 3v5"/><path d="M5.2 10.2l1.4 1.4"/><path d="M2 17h2"/><path d="M20 17h2"/><path d="M17.4 11.6l1.4-1.4"/><path d="M12 17a5 5 0 0 0 0-10"/><path d="M4 17h16"/></svg>
+                <span class="text-white">Subuh</span>
+              </span>
+              <span class="flex items-end gap-1 justify-start">
+                <span class="text-white text-lg font-bold">04:37</span>
+                <span class="text-sm text-gray-300 font-semibold mb-[2px]">WIB</span>
+              </span>
+            </div>
+            <div class="text-xs text-green-200 mt-1 ml-7">Sekitar 5 jam 12 menit lagi</div>
+          </div>
+          <div class="flex justify-between items-center text-base font-semibold leading-tight hover:bg-white/20 rounded-lg transition">
+            <span class="flex items-center gap-2">
+              <!-- Dzuhur: Matahari (Sun) -->
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+              <span class="text-white">Dzuhur</span>
+            </span>
+            <span class="flex items-end gap-1 justify-start">
+              <span class="text-white text-lg font-bold">12:01</span>
+              <span class="text-sm text-gray-300 font-semibold mb-[2px]">WIB</span>
+            </span>
+          </div>
+          <div class="flex justify-between items-center text-base font-semibold leading-tight hover:bg-white/20 rounded-lg transition">
+            <span class="flex items-center gap-2">
+              <!-- Ashar: Matahari condong (Sun Low) -->
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2"><circle cx="12" cy="16" r="5"/><path d="M12 1v2M12 21v2M4.22 8.22l1.42 1.42M18.36 22.36l1.42 1.42M1 16h2M21 16h2M4.22 23.78l1.42-1.42M18.36 11.64l1.42-1.42"/></svg>
+              <span class="text-white">Ashar</span>
+            </span>
+            <span class="flex items-end gap-1 justify-start">
+              <span class="text-white text-lg font-bold">15:23</span>
+              <span class="text-sm text-gray-300 font-semibold mb-[2px]">WIB</span>
+            </span>
+          </div>
+          <div class="flex justify-between items-center text-base font-semibold leading-tight hover:bg-white/20 rounded-lg transition">
+            <span class="flex items-center gap-2">
+              <!-- Maghrib: Sunset -->
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2"><path d="M17 18a5 5 0 0 0-10 0"/><path d="M12 9v5"/><path d="M4 17h16"/><path d="M2 21h20"/></svg>
+              <span class="text-white">Maghrib</span>
+            </span>
+            <span class="flex items-end gap-1 justify-start">
+              <span class="text-white text-lg font-bold">17:58</span>
+              <span class="text-sm text-gray-300 font-semibold mb-[2px]">WIB</span>
+            </span>
+          </div>
+          <div class="flex justify-between items-center text-base font-semibold leading-tight hover:bg-white/20 rounded-lg transition">
+            <span class="flex items-center gap-2">
+              <!-- Isya: Bulan sabit (Crescent Moon) -->
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3A7 7 0 0 0 21 12.79z"/></svg>
+              <span class="text-white">Isya</span>
+            </span>
+            <span class="flex items-end gap-1 justify-start">
+              <span class="text-white text-lg font-bold">19:10</span>
+              <span class="text-sm text-gray-300 font-semibold mb-[2px]">WIB</span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    function updateClock() {
+      const now = new Date();
+      const h = String(now.getHours()).padStart(2, '0');
+      const m = String(now.getMinutes()).padStart(2, '0');
+      const s = String(now.getSeconds()).padStart(2, '0');
+      document.getElementById('clock').textContent = `${h}:${m}:${s}`;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+  </script>
+</body>
+</html>
