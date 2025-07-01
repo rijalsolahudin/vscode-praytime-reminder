@@ -12,12 +12,29 @@
 
 - **Automatic Location Detection:** Prayer times are fetched based on your city/country (auto-detected by IP, with fallback to Jakarta).
 - **Prayer Schedule:** See today's sholat times (Subuh, Dzuhur, Ashar, Maghrib, Isya) in a modern, responsive webview.
-- **Rotating Quotes & Backgrounds:** Every minute, the background and quote change to keep you inspired.
+- **Rotating Quotes & Backgrounds:** Every minute, the background and quote change to keep you inspired. Quotes and background images are regularly updated and will continue to grow, so you'll always find new inspiration and fresh visuals in the extension.
 - **Adzan Reminders:**
   - **5 minutes before adzan:** A popup appears with a countdown.
   - **At adzan time:** A popup appears with prayer info and an option to play the adzan audio.
 - **Status Bar Integration:** Always see the next prayer and how many minutes/hours remain.
 - **Manual Test:** You can trigger the adzan popup manually via the command palette (`PrayTime Reminder: Test Adzan Notification`).
+
+## Showcase
+
+Here are some examples of the beautiful backgrounds and inspirational quotes you will see in PrayTime Reminder:
+
+<p align="center">
+  <img src="https://i.imgur.com/o2bSMs3.png" alt="PrayTime Reminder Background 1" width="400"/>
+  <br><em>See today's prayer times, current clock, and your location in a beautiful, inspirational interface.</em>
+</p>
+<p align="center">
+  <img src="https://i.imgur.com/02FGYeT.png" alt="PrayTime Reminder Background 2" width="400"/>
+  <br><em>Get a popup reminder 5 minutes before adzan, so you never miss a prayer.</em>
+</p>
+<p align="center">
+  <img src="https://i.imgur.com/3fMhAyq.png" alt="PrayTime Reminder Background 3" width="400"/>
+  <br><em>Receive a notification at adzan time, complete with the option to play the adzan audio.</em>
+</p>
 
 ## How to Use
 
