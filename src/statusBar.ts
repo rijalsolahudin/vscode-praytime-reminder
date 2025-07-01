@@ -5,8 +5,16 @@ import { triggerAdzanReminder, lastWebviewPanel } from './extension';
 
 let statusBarItem: vscode.StatusBarItem | undefined;
 let updateInterval: NodeJS.Timeout | undefined;
+let statusBarInterval: NodeJS.Timeout | undefined;
+let adzanInterval: NodeJS.Timeout | undefined;
 let lastTriggeredPrayer: string | null = null;
 let lastSoonTriggeredPrayer: string | null = null;
+let lastLockResetKey: string | null = null;
+let soonPopupPendingPrayer: { prayer: string, adzanTime: Date, city: string, country: string, now: Date } | null = null;
+let adzanPopupPendingPrayer: { prayer: string, adzanTime: Date, time: string, city: string, country: string, timeZone: string, now: Date } | null = null;
+let cachedLocation: { city: string, country: string } | null = null;
+let cachedPrayTimes: { prayTimes: Record<string, string>, errorMsg?: string } | null = null;
+let cachedDate: number | null = null;
 
 // --- Status Bar Initialization ---
 function createStatusBar() {
@@ -18,10 +26,11 @@ function createStatusBar() {
 
 // --- Status Bar Update ---
 async function updateStatusBarText() {
-  if (!statusBarItem) return;
+  await refreshCacheIfNeeded();
+  if (!statusBarItem || !cachedLocation || !cachedPrayTimes) return;
 
-  const { city, country } = await getUserLocation();
-  const { prayTimes, errorMsg } = await getUserPrayTimes(city, country);
+  const { city, country } = cachedLocation;
+  const { prayTimes, errorMsg } = cachedPrayTimes;
 
   if (errorMsg) {
     statusBarItem.text = 'Jadwal Sholat: Gagal';
@@ -112,24 +121,28 @@ async function showSoonPopup(prayer: string, adzanTime: Date, city: string, coun
         location: `${city}, ${country}`,
         secondsLeft: Math.floor((adzanTime.getTime() - now.getTime()) / 1000)
       });
+      lastSoonTriggeredPrayer = soonKey;
+      soonPopupPendingPrayer = null;
     }
   };
   if (!lastWebviewPanel) {
-    await triggerAdzanReminder();
-    setTimeout(sendSoonPopup, 700);
+    if (!soonPopupPendingPrayer || soonPopupPendingPrayer.prayer !== prayer || soonPopupPendingPrayer.now.getDate() !== now.getDate()) {
+      soonPopupPendingPrayer = { prayer, adzanTime, city, country, now };
+      await triggerAdzanReminder();
+    }
   } else {
     sendSoonPopup();
   }
-  lastSoonTriggeredPrayer = soonKey;
 }
 
 function shouldShowAdzanPopup(adzanTime: Date, now: Date, prayer: string): boolean {
-  return now.getHours() === adzanTime.getHours() && now.getMinutes() === adzanTime.getMinutes() && lastTriggeredPrayer !== `${prayer}-${now.getDate()}`;
+  const adzanKey = `${prayer}-${now.getDate()}`;
+  return now.getHours() === adzanTime.getHours() && now.getMinutes() === adzanTime.getMinutes() && lastTriggeredPrayer !== adzanKey;
 }
 
 async function showAdzanPopup(prayer: string, adzanTime: Date, time: string, city: string, country: string, timeZone: string, now: Date) {
-  await triggerAdzanReminder();
-  setTimeout(() => {
+  const adzanKey = `${prayer}-${now.getDate()}`;
+  const sendAdzanPopup = () => {
     if (lastWebviewPanel) {
       lastWebviewPanel.webview.postMessage({
         showAdzanPopup: true,
@@ -138,20 +151,57 @@ async function showAdzanPopup(prayer: string, adzanTime: Date, time: string, cit
         location: `${city}, ${country}`,
         timeZone
       });
+      lastTriggeredPrayer = adzanKey;
+      adzanPopupPendingPrayer = null;
     }
-  }, 700);
-  lastTriggeredPrayer = `${prayer}-${now.getDate()}`;
+  };
+  if (!lastWebviewPanel) {
+    if (!adzanPopupPendingPrayer || adzanPopupPendingPrayer.prayer !== prayer || adzanPopupPendingPrayer.now.getDate() !== now.getDate()) {
+      adzanPopupPendingPrayer = { prayer, adzanTime, time, city, country, timeZone, now };
+      await triggerAdzanReminder();
+    }
+  } else {
+    sendAdzanPopup();
+  }
+}
+
+async function refreshCacheIfNeeded() {
+  const now = new Date();
+  if (!cachedDate || cachedDate !== now.getDate() || !cachedLocation || !cachedPrayTimes) {
+    cachedLocation = await getUserLocation();
+    cachedPrayTimes = await getUserPrayTimes(cachedLocation.city, cachedLocation.country);
+    cachedDate = now.getDate();
+  }
 }
 
 // --- Main function ---
 async function checkAndTriggerAdzan() {
-  const { city, country } = await getUserLocation();
-  const { prayTimes, errorMsg } = await getUserPrayTimes(city, country);
+  await refreshCacheIfNeeded();
+  if (!cachedLocation || !cachedPrayTimes) return;
+  const { city, country } = cachedLocation;
+  const { prayTimes, errorMsg } = cachedPrayTimes;
   if (errorMsg) return;
 
   const now = new Date();
   const order = ['subuh', 'dzuhur', 'ashar', 'maghrib', 'isya'] as const;
   const timeZone = getTimeZoneLabel();
+
+  // RESET LOCK jika hari sudah berganti
+  const today = now.getDate();
+  if (!lastLockResetKey || !lastLockResetKey.endsWith(`-${today}`)) {
+    lastTriggeredPrayer = null;
+    lastSoonTriggeredPrayer = null;
+    lastLockResetKey = `reset-${today}`;
+  }
+
+  let currentPrayerIdx = -1;
+  for (let i = order.length - 1; i >= 0; i--) {
+    const adzanTime = getPrayerDateTime(prayTimes[order[i]], now);
+    if (now.getTime() >= adzanTime.getTime()) {
+      currentPrayerIdx = i;
+      break;
+    }
+  }
 
   for (const prayer of order) {
     const adzanTime = getPrayerDateTime(prayTimes[prayer], now);
@@ -168,16 +218,23 @@ async function checkAndTriggerAdzan() {
 // --- Interval Management ---
 function scheduleStatusBarUpdate() {
   updateStatusBarText();
-  updateInterval = setInterval(() => {
+  checkAndTriggerAdzan();
+  statusBarInterval = setInterval(() => {
     updateStatusBarText();
+  }, 60 * 1000); // setiap 60 detik
+  adzanInterval = setInterval(() => {
     checkAndTriggerAdzan();
-  }, 60 * 1000);
+  }, 1000); // setiap detik
 }
 
 function clearStatusBarUpdate() {
-  if (updateInterval) {
-    clearInterval(updateInterval);
-    updateInterval = undefined;
+  if (statusBarInterval) {
+    clearInterval(statusBarInterval);
+    statusBarInterval = undefined;
+  }
+  if (adzanInterval) {
+    clearInterval(adzanInterval);
+    adzanInterval = undefined;
   }
 }
 
@@ -193,4 +250,35 @@ export function disposeStatusBar() {
     statusBarItem.dispose();
     statusBarItem = undefined;
   }
+}
+
+// PATCH: Listen webview ready event to send pending soon/adzan popup
+if (typeof lastWebviewPanel !== 'undefined' && lastWebviewPanel !== null) {
+  lastWebviewPanel.webview.onDidReceiveMessage(msg => {
+    if (msg.ready && soonPopupPendingPrayer) {
+      const { prayer, adzanTime, city, country, now } = soonPopupPendingPrayer;
+      const soonKey = `${prayer}-soon-${now.getDate()}`;
+      lastWebviewPanel!.webview.postMessage({
+        showAdzanSoonPopup: true,
+        prayerName: getPrayerDisplayName(prayer),
+        location: `${city}, ${country}`,
+        secondsLeft: Math.floor((adzanTime.getTime() - now.getTime()) / 1000)
+      });
+      lastSoonTriggeredPrayer = soonKey;
+      soonPopupPendingPrayer = null;
+    }
+    if (msg.ready && adzanPopupPendingPrayer) {
+      const { prayer, adzanTime, time, city, country, timeZone, now } = adzanPopupPendingPrayer;
+      const adzanKey = `${prayer}-${now.getDate()}`;
+      lastWebviewPanel!.webview.postMessage({
+        showAdzanPopup: true,
+        prayerName: getPrayerDisplayName(prayer),
+        time,
+        location: `${city}, ${country}`,
+        timeZone
+      });
+      lastTriggeredPrayer = adzanKey;
+      adzanPopupPendingPrayer = null;
+    }
+  });
 } 
