@@ -51,5 +51,10 @@
     "typescript": "^5.8.3"
   },
   "icon": "images/icon.png",
-  "publisher": "RijalSolahudin"
+  "publisher": "RijalSolahudin",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rijalsolahudin/vscode-praytime-reminder"
+  },
+  "license": "MIT"
 }
