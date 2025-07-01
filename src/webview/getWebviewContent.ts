@@ -3,9 +3,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { getRandomBackground } from '../utils/backgroundUtils';
 import { getRandomQuote } from '../utils/quoteUtils';
-import { getHijriDateString } from '../api/praytimeApi';
-import { getUserLocation } from '../api/userLocation';
-import { getUserPrayTimes } from '../api/userPrayTimes';
+import { getHijriDateString } from '../api/hijriDateApi';
+import { getUserPrayData } from '../api/getUserPrayData';
 
 // --- Types ---
 export type PrayKey = 'subuh' | 'dzuhur' | 'ashar' | 'maghrib' | 'isya';
@@ -184,8 +183,7 @@ export async function getWebviewContent(adzanAudioUrl: string): Promise<string> 
   const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const timeZone = getTimezone(tz);
 
-  const { city, country, locationString } = await getUserLocation();
-  const { prayTimes, errorMsg } = await getUserPrayTimes(city, country);
+  const { prayTimes, location, errorMsg } = await getUserPrayData();
   const now = new Date();
   const { nextPrayer, prayerVars } = getNextPrayerVars(prayTimes, now);
 
@@ -194,7 +192,7 @@ export async function getWebviewContent(adzanAudioUrl: string): Promise<string> 
     quote,
     masehiDate,
     hijriDate,
-    location: locationString,
+    location: location,
     prayTimes,
     timeZone,
     prayerVars,

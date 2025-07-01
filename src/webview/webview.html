@@ -20,6 +20,10 @@
       min-width: 100vw;
     }
     .overlay { background: rgba(24,24,27,0.7); position: fixed; inset: 0; z-index: 0; }
+    .prayer-hover:hover {
+      background: rgba(255,255,255,0.4) !important;
+      transition: background 0.2s;
+    }
     .glass {
       border-radius: 1.5rem;
     }
@@ -71,7 +75,7 @@
       <div class="w-full md:w-1/2 max-w-md bg-black/30 rounded-2xl p-6 md:p-8 shadow-lg h-full">
         <div class="font-bold text-xs md:text-sm mb-2 text-left tracking-wide text-white leading-tight">Jadwal sholat hari ini :</div>
         <div class="flex flex-col gap-2.5">
-          <div class="flex flex-col rounded-lg px-2 py-1 transition {{PRAY_SUBUH_IS_NEXT}}">
+          <div class="flex flex-col rounded-lg px-2 py-1 transition prayer-hover {{PRAY_SUBUH_IS_NEXT}}">
             <div class="flex justify-between items-center text-base font-semibold leading-tight">
               <span class="flex items-center gap-2">
                 <!-- Subuh: Fajar (Sunrise) -->
@@ -85,7 +89,7 @@
             </div>
             <div class="text-xs text-green-200 mt-1 ml-7" id="countdown-subuh" data-time="{{PRAY_SUBUH}}"></div>
           </div>
-          <div class="flex flex-col rounded-lg px-2 py-1 transition {{PRAY_DZUHUR_IS_NEXT}}">
+          <div class="flex flex-col rounded-lg px-2 py-1 transition prayer-hover {{PRAY_DZUHUR_IS_NEXT}}">
             <div class="flex justify-between items-center text-base font-semibold leading-tight">
               <span class="flex items-center gap-2">
                 <!-- Dzuhur: Matahari (Sun) -->
@@ -99,12 +103,12 @@
             </div>
             <div class="text-xs text-green-200 mt-1 ml-7" id="countdown-dzuhur" data-time="{{PRAY_DZUHUR}}"></div>
           </div>
-          <div class="flex flex-col rounded-lg px-2 py-1 transition {{PRAY_ASHAR_IS_NEXT}}">
+          <div class="flex flex-col rounded-lg px-2 py-1 transition prayer-hover {{PRAY_ASHAR_IS_NEXT}}">
             <div class="flex justify-between items-center text-base font-semibold leading-tight">
               <span class="flex items-center gap-2">
                 <!-- Ashar: Matahari condong (Sun Low) -->
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2"><circle cx="12" cy="16" r="5"/><path d="M12 1v2M12 21v2M4.22 8.22l1.42 1.42M18.36 22.36l1.42 1.42M1 16h2M21 16h2M4.22 23.78l1.42-1.42M18.36 11.64l1.42-1.42"/></svg>
-                <span class="text-white">Ashar</span>
+                <span class="text-white mt-1">Ashar</span>
               </span>
               <span class="flex items-end gap-1 justify-start">
                 <span class="text-white text-lg font-bold">{{PRAY_ASHAR}}</span>
@@ -113,12 +117,12 @@
             </div>
             <div class="text-xs text-green-200 mt-1 ml-7" id="countdown-ashar" data-time="{{PRAY_ASHAR}}"></div>
           </div>
-          <div class="flex flex-col rounded-lg px-2 py-1 transition {{PRAY_MAGHRIB_IS_NEXT}}">
+          <div class="flex flex-col rounded-lg px-2 py-1 transition prayer-hover {{PRAY_MAGHRIB_IS_NEXT}}">
             <div class="flex justify-between items-center text-base font-semibold leading-tight">
               <span class="flex items-center gap-2">
                 <!-- Maghrib: Sunset -->
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2"><path d="M17 18a5 5 0 0 0-10 0"/><path d="M12 9v5"/><path d="M4 17h16"/><path d="M2 21h20"/></svg>
-                <span class="text-white">Maghrib</span>
+                <span class="text-white mt-1">Maghrib</span>
               </span>
               <span class="flex items-end gap-1 justify-start">
                 <span class="text-white text-lg font-bold">{{PRAY_MAGHRIB}}</span>
@@ -127,7 +131,7 @@
             </div>
             <div class="text-xs text-green-200 mt-1 ml-7" id="countdown-maghrib" data-time="{{PRAY_MAGHRIB}}"></div>
           </div>
-          <div class="flex flex-col rounded-lg px-2 py-1 transition {{PRAY_ISYA_IS_NEXT}}">
+          <div class="flex flex-col rounded-lg px-2 py-1 transition prayer-hover {{PRAY_ISYA_IS_NEXT}}">
             <div class="flex justify-between items-center text-base font-semibold leading-tight">
               <span class="flex items-center gap-2">
                 <!-- Isya: Bulan sabit (Crescent Moon) -->

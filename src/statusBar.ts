@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
-import { getUserLocation } from './api/userLocation';
-import { getUserPrayTimes } from './api/userPrayTimes';
+import { getUserPrayData } from './api/getUserPrayData';
 import { triggerAdzanReminder } from './commands';
 import { getLastWebviewPanel } from './panelManager';
 
@@ -13,8 +12,7 @@ let lastSoonTriggeredPrayer: string | null = null;
 let lastLockResetKey: string | null = null;
 let soonPopupPendingPrayer: { prayer: string, adzanTime: Date, city: string, country: string, now: Date } | null = null;
 let adzanPopupPendingPrayer: { prayer: string, adzanTime: Date, time: string, city: string, country: string, timeZone: string, now: Date } | null = null;
-let cachedLocation: { city: string, country: string } | null = null;
-let cachedPrayTimes: { prayTimes: Record<string, string>, errorMsg?: string } | null = null;
+let cachedUserPrayData: { prayTimes: Record<string, string>, cityId: string, location: string, errorMsg: string } | null = null;
 let cachedDate: number | null = null;
 
 // --- Status Bar Initialization ---
@@ -28,10 +26,9 @@ function createStatusBar() {
 // --- Status Bar Update ---
 async function updateStatusBarText() {
   await refreshCacheIfNeeded();
-  if (!statusBarItem || !cachedLocation || !cachedPrayTimes) return;
+  if (!statusBarItem || !cachedUserPrayData) return;
 
-  const { city, country } = cachedLocation;
-  const { prayTimes, errorMsg } = cachedPrayTimes;
+  const { prayTimes, errorMsg } = cachedUserPrayData;
 
   if (errorMsg) {
     statusBarItem.text = 'Jadwal Sholat: Gagal';
@@ -170,9 +167,8 @@ async function showAdzanPopup(prayer: string, adzanTime: Date, time: string, cit
 
 async function refreshCacheIfNeeded() {
   const now = new Date();
-  if (!cachedDate || cachedDate !== now.getDate() || !cachedLocation || !cachedPrayTimes) {
-    cachedLocation = await getUserLocation();
-    cachedPrayTimes = await getUserPrayTimes(cachedLocation.city, cachedLocation.country);
+  if (!cachedDate || cachedDate !== now.getDate() || !cachedUserPrayData) {
+    cachedUserPrayData = await getUserPrayData();
     cachedDate = now.getDate();
   }
 }
@@ -180,9 +176,8 @@ async function refreshCacheIfNeeded() {
 // --- Main function ---
 async function checkAndTriggerAdzan() {
   await refreshCacheIfNeeded();
-  if (!cachedLocation || !cachedPrayTimes) return;
-  const { city, country } = cachedLocation;
-  const { prayTimes, errorMsg } = cachedPrayTimes;
+  if (!cachedUserPrayData) return;
+  const { prayTimes, location, errorMsg } = cachedUserPrayData;
   if (errorMsg) return;
 
   const now = new Date();
@@ -209,10 +204,10 @@ async function checkAndTriggerAdzan() {
   for (const prayer of order) {
     const adzanTime = getPrayerDateTime(prayTimes[prayer], now);
     if (adzanTime && shouldShowSoonPopup(adzanTime, now, prayer)) {
-      await showSoonPopup(prayer, adzanTime, city, country, now);
+      await showSoonPopup(prayer, adzanTime, location, '', now);
     }
     if (adzanTime && shouldShowAdzanPopup(adzanTime, now, prayer)) {
-      await showAdzanPopup(prayer, adzanTime, prayTimes[prayer], city, country, timeZone, now);
+      await showAdzanPopup(prayer, adzanTime, prayTimes[prayer], location, '', timeZone, now);
       break;
     }
   }

@@ -1,72 +1,58 @@
+
 export interface PrayTimeResponse {
-  Fajr: string;
-  Dhuhr: string;
-  Asr: string;
-  Maghrib: string;
-  Isha: string;
+  imsak: string;
+  subuh: string;
+  terbit: string;
+  dhuha: string;
+  dzuhur: string;
+  ashar: string;
+  maghrib: string;
+  isya: string;
+  tanggal: string;
   [key: string]: string;
 }
 
-interface AladhanApiResponse {
+export interface MyQuranCity {
+  id: string;
+  lokasi: string;
+}
+
+interface MyQuranJadwalResponse {
+  status: boolean;
   data: {
-    timings: PrayTimeResponse
+    jadwal: {
+      tanggal: string;
+      imsak: string;
+      subuh: string;
+      terbit: string;
+      dhuha: string;
+      dzuhur: string;
+      ashar: string;
+      maghrib: string;
+      isya: string;
+    }
   }
 }
 
-interface AladhanHijriResponse {
-  code: number;
-  status: string;
-  data: {
-    hijri: {
-      date: string;
-      format: string;
-      day: string;
-      weekday: { en: string; ar: string };
-      month: { number: number; en: string; ar: string; days: number };
-      year: string;
-      designation: { abbreviated: string; expanded: string };
-      holidays: string[];
-      adjustedHolidays: string[];
-      method: string;
-    };
-    gregorian: {
-      date: string;
-      format: string;
-      day: string;
-      weekday: { en: string };
-      month: { number: number; en: string };
-      year: string;
-      designation: { abbreviated: string; expanded: string };
-    };
-    lunarSighting: boolean;
-  };
-}
 
-export async function fetchPrayTimes(city: string, country: string, method: number = 2): Promise<PrayTimeResponse | null> {
-  const url = `https://api.aladhan.com/v1/timingsByCity?city=${encodeURIComponent(city)}&country=${encodeURIComponent(country)}&method=${method}`;
+
+
+// Fetch prayer times by city ID and date (format: YYYY/MM/DD)
+export async function fetchPrayTimesByCityId(cityId: string, date: string): Promise<PrayTimeResponse | null> {
+  // date format: YYYY/MM/DD, or use 'today' for current day
+  const url = `https://api.myquran.com/v2/sholat/jadwal/${cityId}/${date}`;
   try {
-    const res = await fetch(url)
-    const data = (await res.json()) as AladhanApiResponse
-
-    return data.data.timings
-  } catch(err) {
+    const res = await fetch(url);
+    const data = (await res.json()) as MyQuranJadwalResponse;
+    if (data.status && data.data && data.data.jadwal) {
+      return data.data.jadwal;
+    }
+    return null;
+  } catch (err) {
     console.error('Failed to fetch prayer times:', err);
     return null;
   }
 }
 
-export async function getHijriDateString(date: Date): Promise<string> {
-  const d = date.getDate().toString().padStart(2, '0');
-  const m = (date.getMonth() + 1).toString().padStart(2, '0');
-  const y = date.getFullYear();
-  const url = `https://api.aladhan.com/v1/gToH?date=${d}-${m}-${y}`;
-  try {
-    const res = await fetch(url);
-    const data = (await res.json()) as AladhanHijriResponse;
-    if (data.data && data.data.hijri) {
-      const h = data.data.hijri;
-      return `${h.day} ${h.month.en} ${h.year} ${h.designation.abbreviated}`;
-    }
-  } catch (e) {}
-  return '-';
-}
+// Note: myquran API does not provide Hijri date conversion endpoint in v2 docs
+// If needed, implement with another API or remove this function
