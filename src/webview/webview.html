@@ -13,7 +13,7 @@
     html, body { height: 100%; width: 100%; }
     body {
       font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-      background-image: url('{{BACKGROUND_URL}}');
+      /* background-image: url('{{BACKGROUND_URL}}'); */
       background-size: cover;
       background-position: center;
       min-height: 100vh;
@@ -43,9 +43,9 @@
   <div class="relative z-10 flex flex-col items-center w-full min-h-screen">
     <!-- Kutipan ayat, sembunyikan di mobile -->
     <div class="hidden md:flex flex-col items-center mt-12 md:mt-32 px-4">
-      <div class="text-xl md:text-3xl text-white font-bold mb-2 text-center">{{QUOTE_ARABIC}}</div>
-      <div class="text-base md:text-xl text-white mb-1 text-center">{{QUOTE_TRANSLATION}}</div>
-      <div class="text-xs md:text-sm text-gray-300 text-center mb-6">{{QUOTE_SOURCE}}</div>
+      <div class="text-xl md:text-3xl text-white font-bold mb-2 text-center" data-quote-arabic>{{QUOTE_ARABIC}}</div>
+      <div class="text-base md:text-xl text-white mb-1 text-center" data-quote-translation>{{QUOTE_TRANSLATION}}</div>
+      <div class="text-xs md:text-sm text-gray-300 text-center mb-6" data-quote-source>{{QUOTE_SOURCE}}</div>
     </div>
     <!-- Konten utama responsif -->
     <div class="flex flex-col md:flex-row items-center md:items-stretch justify-center w-full max-w-4xl mx-auto gap-8 md:gap-16 px-4 py-8 md:py-16 min-h-[420px]">
@@ -276,7 +276,7 @@
     let adzanSoonCountdownInterval = null;
     function showAdzanSoonPopup({ prayerName, location, secondsLeft, timeZone }) {
       document.getElementById('adzan-soon-popup-icon').innerHTML = getPrayerIcon(prayerName);
-      document.getElementById('adzan-soon-popup-title').textContent = `5 menit lagi menuju adzan ${prayerName} untuk wilayah ${location} dan sekitarnya.`;
+      document.getElementById('adzan-soon-popup-title').textContent = `Sebentar lagi menuju adzan ${prayerName} untuk wilayah ${location} dan sekitarnya.`;
       document.getElementById('adzan-soon-popup-tz').textContent = timeZone || '';
       document.getElementById('adzan-soon-popup-location').textContent = '';
       function updateCountdown() {
@@ -331,6 +331,29 @@
         console.log('acquireVsCodeApi is not defined');
       }
     });
+
+    // --- Random background & quote rotation ---
+    function pickRandom(arr) {
+      return arr[Math.floor(Math.random() * arr.length)];
+    }
+    function updateRandomBgAndQuote() {
+      if (window.backgrounds && window.backgrounds.length) {
+        const bg = pickRandom(window.backgrounds);
+        document.body.style.backgroundImage = `url('${bg.url}')`;
+      }
+      if (window.quotes && window.quotes.length) {
+        const q = pickRandom(window.quotes);
+        const elAr = document.querySelector('[data-quote-arabic]');
+        const elTr = document.querySelector('[data-quote-translation]');
+        const elSrc = document.querySelector('[data-quote-source]');
+        if (elAr) elAr.textContent = q.arabic;
+        if (elTr) elTr.textContent = q.translation;
+        if (elSrc) elSrc.textContent = q.source;
+      }
+    }
+    setInterval(updateRandomBgAndQuote, 60 * 1000);
+    // Panggil sekali saat load
+    updateRandomBgAndQuote();
   </script>
 </body>
 </html>

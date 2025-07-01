@@ -109,6 +109,12 @@ function renderWebviewHtml(params: RenderWebviewHtmlParams): string {
   const htmlPath = path.resolve(__dirname, 'webview.html');
   let html = fs.readFileSync(htmlPath, 'utf-8');
 
+  // Inject quotes and backgrounds arrays as JS variables
+  const quotes = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../assets/quotes.json'), 'utf-8'));
+  const backgrounds = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../assets/backgrounds.json'), 'utf-8'));
+  const injectDataScript = `<script>window.quotes = ${JSON.stringify(quotes)}; window.backgrounds = ${JSON.stringify(backgrounds)};</script>`;
+  html = html.replace('</head>', `${injectDataScript}\n</head>`);
+
   html = html
     .replace(/{{BACKGROUND_URL}}/g, params.bg.url)
     .replace(/{{QUOTE_ARABIC}}/g, params.quote.arabic)

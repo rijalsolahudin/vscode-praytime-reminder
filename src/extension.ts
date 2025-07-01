@@ -9,13 +9,11 @@ import { startStatusBar, disposeStatusBar } from './statusBar';
 export let lastWebviewPanel: vscode.WebviewPanel | undefined;
 
 export async function triggerAdzanReminder() {
-	console.log('Trigger adzan called');
 	// If panel exists, reveal it; otherwise, create a new one
 	if (lastWebviewPanel) {
 		lastWebviewPanel.reveal(vscode.ViewColumn.One);
 		// If already ready, send playAdzan immediately
 		if ((lastWebviewPanel as any)._adzanReady) {
-			console.log('Sending playAdzan message to webview (already ready)');
 			lastWebviewPanel.webview.postMessage({ playAdzan: true });
 		}
 	} else {
@@ -29,7 +27,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	// Use the console to output diagnostic information (console.log) and errors (console.error)
 	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "praytime-reminder" is now active!');
+	console.log('Extension "praytime-reminder" is now active!');
 
 	// The command has been defined in the package.json file
 	// Now provide the implementation of the command with registerCommand
@@ -55,7 +53,6 @@ export function activate(context: vscode.ExtensionContext) {
 		panel.webview.onDidReceiveMessage(msg => {
 			if (msg.ready) {
 				(panel as any)._adzanReady = true;
-				console.log('Webview is ready, sending playAdzan message');
 				panel.webview.postMessage({ playAdzan: true });
 			}
 		});

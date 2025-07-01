@@ -51,7 +51,17 @@ async function updateStatusBarText() {
     isya: 'Isya',
   };
 
-  statusBarItem.text = `🕌 ${labelMap[nextName]}: ${nextTime}`;
+  // --- Add countdown to next adzan ---
+  const diffMs = times[nextIdx].getTime() - now.getTime();
+  const diffMin = Math.floor(diffMs / 60000);
+  const diffHour = Math.floor(diffMin / 60);
+  const sisaMin = diffMin % 60;
+  let countdownText = '';
+  if (diffHour > 0) countdownText = `(in ${diffHour}h ${sisaMin}m)`;
+  else if (diffMin > 0) countdownText = `(in ${diffMin} min)`;
+  else if (diffMs > 0) countdownText = '(in < 1 min)';
+
+  statusBarItem.text = `🕌 ${labelMap[nextName]}: ${nextTime} ${countdownText}`;
   statusBarItem.tooltip = 'Klik untuk lihat jadwal sholat lengkap';
   statusBarItem.show();
 }
@@ -87,7 +97,7 @@ function shouldShowSoonPopup(adzanTime: Date, now: Date, prayer: string): boolea
   const diff = adzanTime.getTime() - now.getTime();
   return (
     diff > 0 &&
-    diff <= 6 * 60 * 1000 &&
+    diff <= 5 * 60 * 1000 &&
     lastSoonTriggeredPrayer !== soonKey
   );
 }

@@ -1,12 +1,82 @@
 [
   {
-    "arabic": "لَئِن شَكَرْتُمْ لَأَزِيدَنَّكُمْ وَلَئِن كَفَرْتُمْ إِنَّ عَذَابِي لَشَدِيدٌ",
-    "translation": "Sesungguhnya jika kamu bersyukur, niscaya Aku akan menambah (nikmat) kepadamu, tetapi jika kamu mengingkari (nikmat-Ku), sesungguhnya azab-Ku benar-benar sangat keras.",
-    "source": "QS. Ibrahim: 7"
-  },
-  {
     "arabic": "إِنَّ الصَّلَاةَ تَنْهَىٰ عَنِ الْفَحْشَاءِ وَالْمُنكَرِ",
     "translation": "Sesungguhnya shalat itu mencegah dari (perbuatan) keji dan mungkar.",
     "source": "QS. Al-Ankabut: 45"
+  },
+  {
+    "arabic": "وَأَقِمِ الصَّلَاةَ إِنَّ الصَّلَاةَ كَانَتْ عَلَى الْمُؤْمِنِينَ كِتَابًا مَوْقُوتًا",
+    "translation": "Dirikanlah shalat, karena sesungguhnya shalat itu adalah fardhu yang ditentukan waktunya atas orang-orang yang beriman.",
+    "source": "QS. An-Nisa: 103"
+  },
+  {
+    "arabic": "حَافِظُوا عَلَى الصَّلَوَاتِ وَالصَّلَاةِ الْوُسْطَىٰ",
+    "translation": "Peliharalah semua shalat(mu), dan (peliharalah) shalat wustha.",
+    "source": "QS. Al-Baqarah: 238"
+  },
+  {
+    "arabic": "وَاسْتَعِينُوا بِالصَّبْرِ وَالصَّلَاةِ",
+    "translation": "Dan mintalah pertolongan (kepada Allah) dengan sabar dan shalat.",
+    "source": "QS. Al-Baqarah: 45"
+  },
+  {
+    "arabic": "قَدْ أَفْلَحَ الْمُؤْمِنُونَ الَّذِينَ هُمْ فِي صَلَاتِهِمْ خَاشِعُونَ",
+    "translation": "Sungguh beruntung orang-orang yang beriman, (yaitu) orang yang khusyuk dalam shalatnya.",
+    "source": "QS. Al-Mu'minun: 1-2"
+  },
+  {
+    "arabic": "وَأْمُرْ أَهْلَكَ بِالصَّلَاةِ وَاصْطَبِرْ عَلَيْهَا",
+    "translation": "Dan perintahkanlah kepada keluargamu mendirikan shalat dan bersabarlah kamu dalam mengerjakannya.",
+    "source": "QS. Thaha: 132"
+  },
+  {
+    "arabic": "إِنَّنِي أَنَا اللَّهُ لَا إِلَٰهَ إِلَّا أَنَا فَاعْبُدْنِي وَأَقِمِ الصَّلَاةَ لِذِكْرِي",
+    "translation": "Sesungguhnya Aku ini adalah Allah, tidak ada Tuhan selain Aku, maka sembahlah Aku dan dirikanlah shalat untuk mengingat-Ku.",
+    "source": "QS. Thaha: 14"
+  },
+  {
+    "arabic": "وَأَقِمِ الصَّلَاةَ طَرَفَيِ النَّهَارِ وَزُلَفًا مِّنَ اللَّيْلِ",
+    "translation": "Dan dirikanlah shalat pada kedua tepi siang (pagi dan petang) dan pada bagian permulaan dari malam.",
+    "source": "QS. Hud: 114"
+  },
+  {
+    "arabic": "إِنَّ الْإِنسَانَ خُلِقَ هَلُوعًا ... إِلَّا الْمُصَلِّينَ",
+    "translation": "Sesungguhnya manusia diciptakan bersifat keluh kesah ... kecuali orang-orang yang mengerjakan shalat.",
+    "source": "QS. Al-Ma'arij: 19-22"
+  },
+  {
+    "arabic": "رَكْعَتَا الْفَجْرِ خَيْرٌ مِّنَ الدُّنْيَا وَمَا فِيهَا",
+    "translation": "Dua rakaat shalat fajar (shalat sunnah Subuh) lebih baik daripada dunia dan seisinya.",
+    "source": "HR. Muslim"
+  },
+  {
+    "arabic": "الصَّلَوَاتُ الْخَمْسُ وَالْجُمُعَةُ إِلَى الْجُمُعَةِ كَفَّارَةٌ لِمَا بَيْنَهُنَّ مَا لَمْ تُغْشَ الْكَبَائِرُ",
+    "translation": "Shalat lima waktu dan Jumat ke Jumat adalah penghapus dosa di antara keduanya selama dosa besar dijauhi.",
+    "source": "HR. Muslim"
+  },
+  {
+    "arabic": "مَنْ حَافَظَ عَلَيْهَا كَانَتْ لَهُ نُورًا وَبُرْهَانًا وَنَجَاةً يَوْمَ الْقِيَامَةِ",
+    "translation": "Barangsiapa menjaga shalat, maka shalat itu akan menjadi cahaya, bukti, dan keselamatan baginya pada hari kiamat.",
+    "source": "HR. Ahmad"
+  },
+  {
+    "arabic": "بَيْنَ الرَّجُلِ وَبَيْنَ الشِّرْكِ وَالْكُفْرِ تَرْكُ الصَّلَاةِ",
+    "translation": "Batas antara seseorang dengan syirik dan kufur adalah meninggalkan shalat.",
+    "source": "HR. Muslim"
+  },
+  {
+    "arabic": "أَقْرَبُ مَا يَكُونُ الْعَبْدُ مِنْ رَبِّهِ وَهُوَ سَاجِدٌ",
+    "translation": "Keadaan terdekat seorang hamba dengan Rabb-nya adalah ketika ia sujud.",
+    "source": "HR. Muslim"
+  },
+  {
+    "arabic": "جُعِلَتْ قُرَّةُ عَيْنِي فِي الصَّلَاةِ",
+    "translation": "Dijadikan penyejuk mataku dalam shalat.",
+    "source": "HR. An-Nasa'i"
+  },
+  {
+    "arabic": "اللَّهُ أَكْبَرُ اللَّهُ أَكْبَرُ ... حَيَّ عَلَى الصَّلَاةِ",
+    "translation": "Allah Maha Besar ... Marilah shalat!",
+    "source": "Adzan"
   }
 ] 

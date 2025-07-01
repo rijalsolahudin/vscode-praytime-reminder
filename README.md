@@ -1,71 +1,36 @@
-# praytime-reminder README
+# PrayTime Reminder VSCode Extension
 
-This is the README for your extension "praytime-reminder". After writing up a brief description, we recommend including the following sections.
+**PrayTime Reminder** is a Visual Studio Code extension designed for Muslim developers to help you never miss a prayer (sholat) while working. It provides:
+
+- 🕌 **Daily prayer schedule** for your location
+- 🌄 **Beautiful rotating backgrounds** and inspiring **Qur'an verses & hadith quotes**
+- ⏰ **Popup reminders** 5 minutes before and at the exact time of adzan (call to prayer)
+- 🔔 **Audio adzan** playback (with user permission)
+- 📊 **Status bar** showing the next prayer time and a real-time countdown
 
 ## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+- **Automatic Location Detection:** Prayer times are fetched based on your city/country (auto-detected by IP, with fallback to Jakarta).
+- **Prayer Schedule:** See today's sholat times (Subuh, Dzuhur, Ashar, Maghrib, Isya) in a modern, responsive webview.
+- **Rotating Quotes & Backgrounds:** Every minute, the background and quote change to keep you inspired.
+- **Adzan Reminders:**
+  - **5 minutes before adzan:** A popup appears with a countdown.
+  - **At adzan time:** A popup appears with prayer info and an option to play the adzan audio.
+- **Status Bar Integration:** Always see the next prayer and how many minutes/hours remain.
+- **Manual Test:** You can trigger the adzan popup manually via the command palette (`PrayTime Reminder: Test Adzan Notification`).
 
-For example if there is an image subfolder under your extension project workspace:
+## How to Use
 
-\!\[feature X\]\(images/feature-x.png\)
+1. **Install the extension** from the VSCode Marketplace or sideload it.
+2. **Reload VSCode.** The extension will auto-detect your location and show the prayer schedule.
+3. **Check the status bar** for the next prayer and countdown.
+4. **Open the webview** (from the status bar or command palette) to see the full schedule, quotes, and backgrounds.
+5. **At prayer times,** popups will appear to remind you, with an option to play the adzan audio.
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
-
-## Requirements
-
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
-
-## Extension Settings
-
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
-
-For example:
-
-This extension contributes the following settings:
-
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
-
-## Known Issues
-
-Calling out known issues can help limit users opening duplicate issues against your extension.
-
-## Release Notes
-
-Users appreciate release notes as you update your extension.
-
-### 1.0.0
-
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
+## Who is this for?
+- Muslim developers who want to stay mindful of prayer times while coding.
+- Anyone who wants a beautiful, inspirational reminder of sholat in their workspace.
 
 ---
 
-## Following extension guidelines
-
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
-
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
-
-## Working with Markdown
-
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
-
-## For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+**May your code and your prayers always be on time!**
