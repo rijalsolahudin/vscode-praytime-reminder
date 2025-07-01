@@ -25,6 +25,7 @@ export interface RenderWebviewHtmlParams {
   prayerVars: PrayerVars;
   nextPrayer: PrayKey | '';
   errorMsg: string;
+  adzanAudioUrl: string;
 }
 
 /**
@@ -76,9 +77,18 @@ function getNextPrayerVars(prayTimes: PrayTimes, now: Date): { nextPrayer: PrayK
       return d;
     });
 
+    // Cari index waktu sholat berikutnya (lebih dari 15 menit setelah waktu sholat sebelumnya)
     let nextIdx = prayerTimesToday.findIndex(d => d.getTime() > now.getTime());
-    if (nextIdx === -1) nextIdx = 0;
-    nextPrayer = order[nextIdx];
+    // Cek apakah masih dalam 15 menit setelah waktu sholat sebelumnya
+    let currentIdx = nextIdx === 0 ? order.length - 1 : nextIdx - 1;
+    let currentPrayerTime = prayerTimesToday[currentIdx];
+    let isWithin15Min = now.getTime() - currentPrayerTime.getTime() <= 15 * 60 * 1000 && now.getTime() - currentPrayerTime.getTime() >= 0;
+    if (isWithin15Min) {
+      nextPrayer = order[currentIdx];
+    } else {
+      if (nextIdx === -1) nextIdx = 0;
+      nextPrayer = order[nextIdx];
+    }
 
     for (const k of order) {
       const isNext = k === nextPrayer ? 'bg-green-500/30' : '';
@@ -124,7 +134,8 @@ function renderWebviewHtml(params: RenderWebviewHtmlParams): string {
     .replace(/{{PRAY_MAGHRIB_COUNTDOWN}}/g, params.prayerVars.maghrib.countdown)
     .replace(/{{PRAY_ISYA_COUNTDOWN}}/g, params.prayerVars.isya.countdown)
     .replace(/{{NEXT_PRAYER_KEY}}/g, params.nextPrayer)
-    .replace(/{{ERROR_MESSAGE}}/g, params.errorMsg);
+    .replace(/{{ERROR_MESSAGE}}/g, params.errorMsg)
+    .replace(/{{ADZAN_AUDIO_URL}}/g, params.adzanAudioUrl);
 
   return html;
 }
@@ -159,7 +170,7 @@ function getTimezone(tz: string): string {
  * This is the entry point called from the extension backend.
  * @returns The final HTML string for the webview
  */
-export async function getWebviewContent(): Promise<string> {
+export async function getWebviewContent(adzanAudioUrl: string): Promise<string> {
   const bg = getRandomBackground();
   const quote = getRandomQuote();
   const masehiDate = getMasehiDateString();
@@ -182,6 +193,7 @@ export async function getWebviewContent(): Promise<string> {
     timeZone,
     prayerVars,
     nextPrayer,
-    errorMsg
+    errorMsg,
+    adzanAudioUrl
   });
 } 

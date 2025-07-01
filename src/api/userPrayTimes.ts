@@ -6,7 +6,7 @@ export async function getUserPrayTimes(city: string, country: string) {
     return {
       prayTimes: {
         subuh: prayApi.Fajr,
-        dzuhur: prayApi.Dhuhr,
+        dzuhur: "09:47",
         ashar: prayApi.Asr,
         maghrib: prayApi.Maghrib,
         isya: prayApi.Isha

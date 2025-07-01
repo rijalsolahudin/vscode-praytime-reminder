@@ -1,9 +1,12 @@
 import * as vscode from 'vscode';
 import { getUserLocation } from './api/userLocation';
 import { getUserPrayTimes } from './api/userPrayTimes';
+import { triggerAdzanReminder, lastWebviewPanel } from './extension';
 
 let statusBarItem: vscode.StatusBarItem | undefined;
 let updateInterval: NodeJS.Timeout | undefined;
+let lastTriggeredPrayer: string | null = null;
+let lastSoonTriggeredPrayer: string | null = null;
 
 // --- Status Bar Initialization ---
 function createStatusBar() {
@@ -53,10 +56,112 @@ async function updateStatusBarText() {
   statusBarItem.show();
 }
 
+function getPrayerDisplayName(prayer: string): string {
+  const map: Record<string, string> = {
+    subuh: 'Subuh',
+    dzuhur: 'Dzuhur',
+    ashar: 'Ashar',
+    maghrib: 'Maghrib',
+    isya: 'Isya',
+  };
+  return map[prayer] || prayer;
+}
+
+function getPrayerDateTime(time: string, now: Date): Date {
+  const [h, m] = time.split(':').map(Number);
+  const d = new Date(now);
+  d.setHours(h, m, 0, 0);
+  return d;
+}
+
+function getTimeZoneLabel(): string {
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  if (tz === 'Asia/Jakarta' || tz === 'Asia/Pontianak') return 'WIB';
+  if (tz === 'Asia/Makassar' || tz === 'Asia/Ujung_Pandang' || tz === 'Asia/Kendari' || tz === 'Asia/Palu') return 'WITA';
+  if (tz === 'Asia/Jayapura') return 'WIT';
+  return tz;
+}
+
+function shouldShowSoonPopup(adzanTime: Date, now: Date, prayer: string): boolean {
+  const soonKey = `${prayer}-soon-${now.getDate()}`;
+  const diff = adzanTime.getTime() - now.getTime();
+  return (
+    diff > 0 &&
+    diff <= 6 * 60 * 1000 &&
+    lastSoonTriggeredPrayer !== soonKey
+  );
+}
+
+async function showSoonPopup(prayer: string, adzanTime: Date, city: string, country: string, now: Date) {
+  const soonKey = `${prayer}-soon-${now.getDate()}`;
+  const sendSoonPopup = () => {
+    if (lastWebviewPanel) {
+      lastWebviewPanel.webview.postMessage({
+        showAdzanSoonPopup: true,
+        prayerName: getPrayerDisplayName(prayer),
+        location: `${city}, ${country}`,
+        secondsLeft: Math.floor((adzanTime.getTime() - now.getTime()) / 1000)
+      });
+    }
+  };
+  if (!lastWebviewPanel) {
+    await triggerAdzanReminder();
+    setTimeout(sendSoonPopup, 700);
+  } else {
+    sendSoonPopup();
+  }
+  lastSoonTriggeredPrayer = soonKey;
+}
+
+function shouldShowAdzanPopup(adzanTime: Date, now: Date, prayer: string): boolean {
+  return now.getHours() === adzanTime.getHours() && now.getMinutes() === adzanTime.getMinutes() && lastTriggeredPrayer !== `${prayer}-${now.getDate()}`;
+}
+
+async function showAdzanPopup(prayer: string, adzanTime: Date, time: string, city: string, country: string, timeZone: string, now: Date) {
+  await triggerAdzanReminder();
+  setTimeout(() => {
+    if (lastWebviewPanel) {
+      lastWebviewPanel.webview.postMessage({
+        showAdzanPopup: true,
+        prayerName: getPrayerDisplayName(prayer),
+        time,
+        location: `${city}, ${country}`,
+        timeZone
+      });
+    }
+  }, 700);
+  lastTriggeredPrayer = `${prayer}-${now.getDate()}`;
+}
+
+// --- Main function ---
+async function checkAndTriggerAdzan() {
+  const { city, country } = await getUserLocation();
+  const { prayTimes, errorMsg } = await getUserPrayTimes(city, country);
+  if (errorMsg) return;
+
+  const now = new Date();
+  const order = ['subuh', 'dzuhur', 'ashar', 'maghrib', 'isya'] as const;
+  const timeZone = getTimeZoneLabel();
+
+  for (const prayer of order) {
+    const adzanTime = getPrayerDateTime(prayTimes[prayer], now);
+    if (shouldShowSoonPopup(adzanTime, now, prayer)) {
+      await showSoonPopup(prayer, adzanTime, city, country, now);
+    }
+    if (shouldShowAdzanPopup(adzanTime, now, prayer)) {
+      await showAdzanPopup(prayer, adzanTime, prayTimes[prayer], city, country, timeZone, now);
+      break;
+    }
+  }
+}
+
 // --- Interval Management ---
 function scheduleStatusBarUpdate() {
   updateStatusBarText();
-  updateInterval = setInterval(updateStatusBarText, 60 * 1000);
+  updateInterval = setInterval(() => {
+    updateStatusBarText();
+    checkAndTriggerAdzan();
+  }, 60 * 1000);
 }
 
 function clearStatusBarUpdate() {

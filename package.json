@@ -18,6 +18,10 @@
       {
         "command": "praytime-reminder.openSettings",
         "title": "Buka Pengaturan PrayTime Reminder"
+      },
+      {
+        "command": "praytime-reminder.testAdzan",
+        "title": "Test Adzan Notification"
       }
     ],
     "views": {
@@ -25,7 +29,7 @@
     }
   },
   "scripts": {
-    "copy-assets": "mkdir -p out/assets && cp src/assets/*.json out/assets/",
+    "copy-assets": "mkdir -p out/assets && cp src/assets/*.json out/assets/ && cp src/assets/adzan-mekkah.mp3 out/assets/ || true",
     "copy-html": "cp src/webview/webview.html out/webview/webview.html",
     "compile": "tsc -p ./ && pnpm run copy-assets && pnpm run copy-html",
     "watch": "tsc -watch -p ./",
