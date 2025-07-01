@@ -24,6 +24,10 @@
 Here are some examples of the beautiful backgrounds and inspirational quotes you will see in PrayTime Reminder:
 
 <p align="center">
+  <img src="https://i.imgur.com/PQVlEFg.png" alt="PrayTime Reminder StatusBar" width="400"/>
+  <br><em>See the next prayer time in the bottom right status bar. Click it to open the full prayer times view.</em>
+</p>
+<p align="center">
   <img src="https://i.imgur.com/o2bSMs3.png" alt="PrayTime Reminder Background 1" width="400"/>
   <br><em>See today's prayer times, current clock, and your location in a beautiful, inspirational interface.</em>
 </p>
@@ -35,6 +39,7 @@ Here are some examples of the beautiful backgrounds and inspirational quotes you
   <img src="https://i.imgur.com/3fMhAyq.png" alt="PrayTime Reminder Background 3" width="400"/>
   <br><em>Receive a notification at adzan time, complete with the option to play the adzan audio.</em>
 </p>
+
 
 ## How to Use
 
