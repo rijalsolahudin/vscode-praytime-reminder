@@ -5,11 +5,11 @@ export interface UserLocation {
 
 export async function getUserLocationByIP(): Promise<UserLocation | null> {
   try {
-    const res = await fetch('https://ipapi.co/json/');
-    const data = (await res.json()) as { city: string; country_name: string };
+    const res = await fetch('http://ip-api.com/json/');
+    const data = (await res.json()) as { city: string; country: string };
     return {
       city: data.city,
-      country: data.country_name
+      country: data.country
     };
   } catch (err) {
     console.error('Failed to detect location by IP:', err);

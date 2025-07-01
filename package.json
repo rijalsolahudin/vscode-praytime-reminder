@@ -10,28 +10,18 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:praytime-reminder.helloWorld"
+    "onStartupFinished"
   ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
-      {
-        "command": "praytime-reminder.helloWorld",
-        "title": "Hello World"
-      },
       {
         "command": "praytime-reminder.openSettings",
         "title": "Buka Pengaturan PrayTime Reminder"
       }
     ],
     "views": {
-      "explorer": [
-        {
-          "id": "praytimeSidebar",
-          "name": "PrayTime Reminder",
-          "icon": "images/icon.png"
-        }
-      ]
+      
     }
   },
   "scripts": {
