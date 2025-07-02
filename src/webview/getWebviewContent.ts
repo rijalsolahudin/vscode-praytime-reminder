@@ -5,13 +5,10 @@ import { getRandomBackground } from '../utils/backgroundUtils';
 import { getRandomQuote } from '../utils/quoteUtils';
 import { getHijriDateString } from '../api/hijriDateApi';
 import { getUserPrayData } from '../api/getUserPrayData';
+import { getNextPrayerVars, getCountdownMinutes, PrayKey, PrayTimes, PrayerVars } from '../utils/prayerTimeUtils';
 
 // --- Types ---
-export type PrayKey = 'subuh' | 'dzuhur' | 'ashar' | 'maghrib' | 'isya';
 
-export type PrayTimes = Record<PrayKey, string>;
-
-export type PrayerVars = Record<PrayKey, { isNext: string; countdown: string }>;
 
 export interface RenderWebviewHtmlParams {
   bg: { url: string };
@@ -27,77 +24,16 @@ export interface RenderWebviewHtmlParams {
   adzanAudioUrl: string;
 }
 
-/**
- * Returns a human-readable countdown string to the target prayer time.
- * @param now Current Date object
- * @param target Target time in 'HH:mm' format
- */
-function getCountdownString(now: Date, target: string): string {
-  const [h, m] = target.split(':').map(Number);
 
-  let targetDate = new Date(now);
-  targetDate.setHours(h, m, 0, 0);
-
-  if (targetDate < now) targetDate.setDate(targetDate.getDate() + 1);
-
-  const diffMs = targetDate.getTime() - now.getTime();
-  const diffMin = Math.floor(diffMs / 60000);
-  const hours = Math.floor(diffMin / 60);
-  const minutes = diffMin % 60;
-
-  if (hours > 0) return `About ${hours} hour(s) ${minutes} minute(s) left`;
-  if (minutes > 0) return `About ${minutes} minute(s) left`;
-  
-  return 'Time has come';
+function formatCountdownString(minutes: number): string {
+  if (minutes <= 0) return 'Time has come';
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  if (hours > 0) return `Sekitar ${hours} jam ${mins} menit lagi`;
+  return `Sekitar ${mins} menit lagi`;
 }
 
-/**
- * Determines which prayer is next and prepares highlight/countdown info for each prayer.
- * @param prayTimes Object with prayer times (subuh, dzuhur, ashar, maghrib, isya)
- * @param now Current Date object
- * @returns nextPrayer (key), and prayerVars (highlight/countdown info for each prayer)
- */
-function getNextPrayerVars(prayTimes: PrayTimes, now: Date): { nextPrayer: PrayKey | ''; prayerVars: PrayerVars } {
-  const order: PrayKey[] = ['subuh', 'dzuhur', 'ashar', 'maghrib', 'isya'];
-  let nextPrayer: PrayKey | '' = '';
-  let prayerVars: PrayerVars = {
-    subuh: { isNext: '', countdown: '' },
-    dzuhur: { isNext: '', countdown: '' },
-    ashar: { isNext: '', countdown: '' },
-    maghrib: { isNext: '', countdown: '' },
-    isya: { isNext: '', countdown: '' },
-  };
 
-  if (!Object.values(prayTimes).includes('-')) {
-    const prayerTimesToday = order.map(k => {
-      const [h, m] = prayTimes[k].split(':').map(Number);
-      const d = new Date(now);
-      d.setHours(h, m, 0, 0);
-      return d;
-    });
-
-    // Cari index waktu sholat berikutnya (lebih dari 15 menit setelah waktu sholat sebelumnya)
-    let nextIdx = prayerTimesToday.findIndex(d => d.getTime() > now.getTime());
-    // Cek apakah masih dalam 15 menit setelah waktu sholat sebelumnya
-    let currentIdx = nextIdx === 0 ? order.length - 1 : nextIdx - 1;
-    let currentPrayerTime = prayerTimesToday[currentIdx];
-    let isWithin15Min = now.getTime() - currentPrayerTime.getTime() <= 15 * 60 * 1000 && now.getTime() - currentPrayerTime.getTime() >= 0;
-    if (isWithin15Min) {
-      nextPrayer = order[currentIdx];
-    } else {
-      if (nextIdx === -1) nextIdx = 0;
-      nextPrayer = order[nextIdx];
-    }
-
-    for (const k of order) {
-      const isNext = k === nextPrayer ? 'bg-green-500/30' : '';
-      const countdown = k === nextPrayer ? getCountdownString(now, prayTimes[k]) : '';
-      prayerVars[k] = { isNext, countdown };
-    }
-  }
-
-  return { nextPrayer, prayerVars };
-}
 
 /**
  * Injects dynamic data into the webview HTML template using {{PLACEHOLDER}} syntax.
@@ -128,16 +64,16 @@ function renderWebviewHtml(params: RenderWebviewHtmlParams): string {
     .replace(/{{PRAY_MAGHRIB}}/g, params.prayTimes.maghrib)
     .replace(/{{PRAY_ISYA}}/g, params.prayTimes.isya)
     .replace(/{{TIME_ZONE}}/g, params.timeZone)
-    .replace(/{{PRAY_SUBUH_IS_NEXT}}/g, params.prayerVars.subuh.isNext)
-    .replace(/{{PRAY_DZUHUR_IS_NEXT}}/g, params.prayerVars.dzuhur.isNext)
-    .replace(/{{PRAY_ASHAR_IS_NEXT}}/g, params.prayerVars.ashar.isNext)
-    .replace(/{{PRAY_MAGHRIB_IS_NEXT}}/g, params.prayerVars.maghrib.isNext)
-    .replace(/{{PRAY_ISYA_IS_NEXT}}/g, params.prayerVars.isya.isNext)
-    .replace(/{{PRAY_SUBUH_COUNTDOWN}}/g, params.prayerVars.subuh.countdown)
-    .replace(/{{PRAY_DZUHUR_COUNTDOWN}}/g, params.prayerVars.dzuhur.countdown)
-    .replace(/{{PRAY_ASHAR_COUNTDOWN}}/g, params.prayerVars.ashar.countdown)
-    .replace(/{{PRAY_MAGHRIB_COUNTDOWN}}/g, params.prayerVars.maghrib.countdown)
-    .replace(/{{PRAY_ISYA_COUNTDOWN}}/g, params.prayerVars.isya.countdown)
+    .replace(/{{PRAY_SUBUH_IS_NEXT}}/g, params.nextPrayer === 'subuh' ? 'bg-green-500/30' : '')
+    .replace(/{{PRAY_DZUHUR_IS_NEXT}}/g, params.nextPrayer === 'dzuhur' ? 'bg-green-500/30' : '')
+    .replace(/{{PRAY_ASHAR_IS_NEXT}}/g, params.nextPrayer === 'ashar' ? 'bg-green-500/30' : '')
+    .replace(/{{PRAY_MAGHRIB_IS_NEXT}}/g, params.nextPrayer === 'maghrib' ? 'bg-green-500/30' : '')
+    .replace(/{{PRAY_ISYA_IS_NEXT}}/g, params.nextPrayer === 'isya' ? 'bg-green-500/30' : '')
+    .replace(/{{PRAY_SUBUH_COUNTDOWN}}/g, params.prayerVars.subuh ? formatCountdownString(params.prayerVars.subuh.countdownMinutes) : '')
+    .replace(/{{PRAY_DZUHUR_COUNTDOWN}}/g, params.prayerVars.dzuhur ? formatCountdownString(params.prayerVars.dzuhur.countdownMinutes) : '')
+    .replace(/{{PRAY_ASHAR_COUNTDOWN}}/g, params.prayerVars.ashar ? formatCountdownString(params.prayerVars.ashar.countdownMinutes) : '')
+    .replace(/{{PRAY_MAGHRIB_COUNTDOWN}}/g, params.prayerVars.maghrib ? formatCountdownString(params.prayerVars.maghrib.countdownMinutes) : '')
+    .replace(/{{PRAY_ISYA_COUNTDOWN}}/g, params.prayerVars.isya ? formatCountdownString(params.prayerVars.isya.countdownMinutes) : '')
     .replace(/{{NEXT_PRAYER_KEY}}/g, params.nextPrayer)
     .replace(/{{ERROR_MESSAGE}}/g, params.errorMsg)
     .replace(/{{ADZAN_AUDIO_URL}}/g, params.adzanAudioUrl);

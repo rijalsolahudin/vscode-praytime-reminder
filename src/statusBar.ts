@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { getUserPrayData } from './api/getUserPrayData';
+import { getNextPrayerVars, PrayKey, PrayTimes, getCountdownMinutes } from './utils/prayerTimeUtils';
 import { triggerAdzanReminder } from './commands';
 import { getLastWebviewPanel } from './panelManager';
 
@@ -23,6 +24,15 @@ function createStatusBar() {
   }
 }
 
+function formatCountdownString(minutes: number): string {
+  if (minutes <= 0) return 'waktunya sholat';
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  if (hours > 0) return `${hours} jam ${mins} menit lagi`;
+  return `${mins} menit lagi`;
+}
+
+
 // --- Status Bar Update ---
 async function updateStatusBarText() {
   await refreshCacheIfNeeded();
@@ -38,16 +48,8 @@ async function updateStatusBarText() {
   }
 
   const now = new Date();
-  const order = ['subuh', 'dzuhur', 'ashar', 'maghrib', 'isya'] as const;
-  type PrayKey = typeof order[number];
-  const times = order.map(k => {
-    const t = prayTimes[k];
-    return getPrayerDateTime(t, now);
-  });
-  let nextIdx = times.findIndex(d => d && d.getTime() > now.getTime());
-  if (nextIdx === -1) nextIdx = 0;
-  const nextName = order[nextIdx];
-  const nextTime = prayTimes[nextName];
+  // Use shared util for next prayer and countdown
+  const { nextPrayer, prayerVars } = getNextPrayerVars(prayTimes as PrayTimes, now);
   const labelMap: Record<PrayKey, string> = {
     subuh: 'Subuh',
     dzuhur: 'Dzuhur',
@@ -55,20 +57,14 @@ async function updateStatusBarText() {
     maghrib: 'Maghrib',
     isya: 'Isya',
   };
-
-  // --- Add countdown to next adzan ---
-  let countdownText = '';
-  if (times[nextIdx] && times[nextIdx] instanceof Date) {
-    const diffMs = times[nextIdx]!.getTime() - now.getTime();
-    const diffMin = Math.floor(diffMs / 60000);
-    const diffHour = Math.floor(diffMin / 60);
-    const sisaMin = diffMin % 60;
-    if (diffHour > 0) countdownText = `(in ${diffHour}h ${sisaMin}m)`;
-    else if (diffMin > 0) countdownText = `(in ${diffMin} min)`;
-    else if (diffMs > 0) countdownText = '(in < 1 min)';
+  let text = '🕌 Jadwal Sholat';
+  if (nextPrayer && nextPrayer in prayTimes) {
+    const rawTime = prayerVars[nextPrayer].rawTime;
+    const countdownMinutes = getCountdownMinutes(now, rawTime);
+    const countdownString = formatCountdownString(countdownMinutes);
+    text = `🕌 ${labelMap[nextPrayer]} ${rawTime} — ${countdownString}`;
   }
-
-  statusBarItem.text = `🕌 ${labelMap[nextName]}: ${nextTime} ${countdownText}`;
+  statusBarItem.text = text;
   statusBarItem.tooltip = 'Klik untuk lihat jadwal sholat lengkap';
   statusBarItem.show();
 }
@@ -217,11 +213,9 @@ async function checkAndTriggerAdzan() {
 function scheduleStatusBarUpdate() {
   updateStatusBarText();
   checkAndTriggerAdzan();
-  statusBarInterval = setInterval(() => {
-    updateStatusBarText();
-  }, 60 * 1000); // setiap 60 detik
   adzanInterval = setInterval(() => {
     checkAndTriggerAdzan();
+    updateStatusBarText();
   }, 1000); // setiap detik
 }
 
