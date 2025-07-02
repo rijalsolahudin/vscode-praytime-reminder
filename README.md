@@ -17,7 +17,6 @@
   - **5 minutes before adzan:** A popup appears with a countdown.
   - **At adzan time:** A popup appears with prayer info and an option to play the adzan audio.
 - **Status Bar Integration:** Always see the next prayer and how many minutes/hours remain.
-- **Manual Test:** You can trigger the adzan popup manually via the command palette (`PrayTime Reminder: Test Adzan Notification`).
 
 ## Showcase
 
