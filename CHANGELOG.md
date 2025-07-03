@@ -6,6 +6,16 @@ All notable changes to the "praytime-reminder" extension will be documented in t
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
 
+
+## [v1.0.3] - 2025-07-03
+
+### Fixed
+- Fixed countdown string formatting in the status bar to always display minutes (e.g., "6 hours 15 minutes" instead of just hours).
+
+### Release Note
+- The countdown in the status bar is now more informative and consistent, always showing minutes when available.
+
+
 ## [v1.0.2] - 2025-07-03
 
 ### Changed
