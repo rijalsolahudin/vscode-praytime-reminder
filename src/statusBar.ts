@@ -32,7 +32,7 @@ function formatCountdownString(seconds: number): string {
   const mins = Math.floor((seconds % 3600) / 60);
   const secs = seconds % 60;
   if (hours > 0) {
-    return `Sekitar ${hours} jam ${mins}`;
+    return `Sekitar ${hours} jam ${mins} menit`;
   }
   if (mins > 0) {
     return `Sekitar ${mins} menit ${secs} detik lagi`;
