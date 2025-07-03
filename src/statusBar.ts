@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { getUserPrayData } from './api/getUserPrayData';
-import { getNextPrayerVars, PrayKey, PrayTimes, getCountdownMinutes } from './utils/prayerTimeUtils';
+import { getNextPrayerVars, PrayKey, PrayTimes } from './utils/prayerTimeUtils';
 import { triggerAdzanReminder } from './commands';
 import { getLastWebviewPanel } from './panelManager';
 
@@ -24,12 +24,14 @@ function createStatusBar() {
   }
 }
 
-function formatCountdownString(minutes: number): string {
-  if (minutes <= 0) return 'waktunya sholat';
-  const hours = Math.floor(minutes / 60);
-  const mins = minutes % 60;
-  if (hours > 0) return `${hours} jam ${mins} menit lagi`;
-  return `${mins} menit lagi`;
+function formatCountdownString(seconds: number): string {
+  if (seconds <= 0) return 'sudah masuk waktu';
+  const hours = Math.floor(seconds / 3600);
+  const mins = Math.floor((seconds % 3600) / 60);
+  const secs = seconds % 60;
+  if (hours > 0) return `Sekitar ${hours} jam ${mins}`;
+  if (mins > 0) return `Sekitar ${mins} menit ${secs} detik lagi`;
+  return `Sekitar ${secs} detik lagi`;
 }
 
 
@@ -60,8 +62,8 @@ async function updateStatusBarText() {
   let text = '🕌 Jadwal Sholat';
   if (nextPrayer && nextPrayer in prayTimes) {
     const rawTime = prayerVars[nextPrayer].rawTime;
-    const countdownMinutes = getCountdownMinutes(now, rawTime);
-    const countdownString = formatCountdownString(countdownMinutes);
+    const countdownSeconds = prayerVars[nextPrayer].countdownSeconds;
+    const countdownString = formatCountdownString(countdownSeconds);
     text = `🕌 ${labelMap[nextPrayer]} ${rawTime} — ${countdownString}`;
   }
   statusBarItem.text = text;
@@ -110,8 +112,10 @@ function shouldShowSoonPopup(adzanTime: Date, now: Date, prayer: string): boolea
 async function showSoonPopup(prayer: string, adzanTime: Date, city: string, country: string, now: Date) {
   const soonKey = `${prayer}-soon-${now.getDate()}`;
   const sendSoonPopup = () => {
-    if (getLastWebviewPanel()) {
-      getLastWebviewPanel()!.webview.postMessage({
+    const panel = getLastWebviewPanel();
+    if (panel) {
+      panel.reveal(vscode.ViewColumn.One); // Pindahkan fokus ke webview
+      panel.webview.postMessage({
         showAdzanSoonPopup: true,
         prayerName: getPrayerDisplayName(prayer),
         location: `${city}, ${country}`,
@@ -139,8 +143,10 @@ function shouldShowAdzanPopup(adzanTime: Date, now: Date, prayer: string): boole
 async function showAdzanPopup(prayer: string, adzanTime: Date, time: string, city: string, country: string, timeZone: string, now: Date) {
   const adzanKey = `${prayer}-${now.getDate()}`;
   const sendAdzanPopup = () => {
-    if (getLastWebviewPanel()) {
-      getLastWebviewPanel()!.webview.postMessage({
+    const panel = getLastWebviewPanel();
+    if (panel) {
+      panel.reveal(vscode.ViewColumn.One); // Pindahkan fokus ke webview
+      panel.webview.postMessage({
         showAdzanPopup: true,
         prayerName: getPrayerDisplayName(prayer),
         time,
