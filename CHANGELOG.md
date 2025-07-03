@@ -6,6 +6,26 @@ All notable changes to the "praytime-reminder" extension will be documented in t
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
 
+## [v1.0.2] - 2025-07-03
+
+### Changed
+- Refactored countdown logic: countdown is now calculated and displayed in seconds (not minutes) for more precise updates.
+- Updated all related functions and types to use seconds for countdown.
+- Status bar and webview now both use the new `countdownSeconds` field for display and logic.
+- Improved and unified countdown string formatting using a reusable method.
+- Cleaned up legacy/unused code and improved maintainability.
+
+### Fixed
+- Ensured popup/adzan reminders always bring the webview to focus.
+- Fixed minor inconsistencies in countdown display and highlight logic.
+
+### Release Note
+This update brings a more accurate and consistent countdown experience:
+- Countdown is now shown in seconds, updating in real time.
+- All UI and backend logic is fully separated and maintainable.
+- Reminder popups are more reliable and always bring the webview to the front.
+
+
 ## [v1.0.1] - 2025-07-02
 
 ### Changed
