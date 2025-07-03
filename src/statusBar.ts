@@ -25,12 +25,18 @@ function createStatusBar() {
 }
 
 function formatCountdownString(seconds: number): string {
-  if (seconds <= 0) return 'sudah masuk waktu';
+  if (seconds <= 0) {
+    return 'sudah masuk waktu';
+  }
   const hours = Math.floor(seconds / 3600);
   const mins = Math.floor((seconds % 3600) / 60);
   const secs = seconds % 60;
-  if (hours > 0) return `Sekitar ${hours} jam ${mins}`;
-  if (mins > 0) return `Sekitar ${mins} menit ${secs} detik lagi`;
+  if (hours > 0) {
+    return `Sekitar ${hours} jam ${mins}`;
+  }
+  if (mins > 0) {
+    return `Sekitar ${mins} menit ${secs} detik lagi`;
+  }
   return `Sekitar ${secs} detik lagi`;
 }
 
@@ -38,7 +44,9 @@ function formatCountdownString(seconds: number): string {
 // --- Status Bar Update ---
 async function updateStatusBarText() {
   await refreshCacheIfNeeded();
-  if (!statusBarItem || !cachedUserPrayData) return;
+  if (!statusBarItem || !cachedUserPrayData) {
+    return;
+  }
 
   const { prayTimes, errorMsg } = cachedUserPrayData;
 
@@ -83,9 +91,13 @@ function getPrayerDisplayName(prayer: string): string {
 }
 
 function getPrayerDateTime(time: string | undefined, now: Date): Date | undefined {
-  if (!time) return undefined;
+  if (!time) {
+    return undefined;
+  }
   const [h, m] = time.split(':').map(Number);
-  if (isNaN(h) || isNaN(m)) return undefined;
+  if (isNaN(h) || isNaN(m)) {
+    return undefined;
+  }
   const d = new Date(now);
   d.setHours(h, m, 0, 0);
   return d;
@@ -93,9 +105,15 @@ function getPrayerDateTime(time: string | undefined, now: Date): Date | undefine
 
 function getTimeZoneLabel(): string {
   const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  if (tz === 'Asia/Jakarta' || tz === 'Asia/Pontianak') return 'WIB';
-  if (tz === 'Asia/Makassar' || tz === 'Asia/Ujung_Pandang' || tz === 'Asia/Kendari' || tz === 'Asia/Palu') return 'WITA';
-  if (tz === 'Asia/Jayapura') return 'WIT';
+  if (tz === 'Asia/Jakarta' || tz === 'Asia/Pontianak') {
+    return 'WIB';
+  }
+  if (tz === 'Asia/Makassar' || tz === 'Asia/Ujung_Pandang' || tz === 'Asia/Kendari' || tz === 'Asia/Palu') {
+    return 'WITA';
+  }
+  if (tz === 'Asia/Jayapura') {
+    return 'WIT';
+  }
   return tz;
 }
 
@@ -178,9 +196,13 @@ async function refreshCacheIfNeeded() {
 // --- Main function ---
 async function checkAndTriggerAdzan() {
   await refreshCacheIfNeeded();
-  if (!cachedUserPrayData) return;
+  if (!cachedUserPrayData) {
+    return;
+  }
   const { prayTimes, location, errorMsg } = cachedUserPrayData;
-  if (errorMsg) return;
+  if (errorMsg) {
+    return;
+  }
 
   const now = new Date();
   const order = ['subuh', 'dzuhur', 'ashar', 'maghrib', 'isya'] as const;

@@ -32,7 +32,9 @@ export function registerCommands(context: vscode.ExtensionContext) {
 		setLastWebviewPanel(panel);
 		(panel as any)._adzanReady = false;
 		panel.onDidDispose(() => {
-			if (getLastWebviewPanel() === panel) setLastWebviewPanel(undefined);
+			if (getLastWebviewPanel() === panel) {
+				setLastWebviewPanel(undefined);
+			}
 		});
 		panel.webview.onDidReceiveMessage(msg => {
 			if (msg.ready) {

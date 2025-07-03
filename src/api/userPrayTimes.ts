@@ -18,7 +18,7 @@ export async function getUserPrayTimes(cityId: string) {
         dzuhur: prayApi.dzuhur,
         ashar: prayApi.ashar,
         maghrib: prayApi.maghrib,
-        isya: "22:22" // Default isya time if not provided
+        isya: prayApi.isya
       },
       errorMsg: ''
     };
