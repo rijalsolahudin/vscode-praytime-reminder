@@ -6,6 +6,14 @@ All notable changes to the "praytime-reminder" extension will be documented in t
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
 
+## [v1.0.4] - 2025-07-04
+
+### Fixed
+- Fixed multiple fetches of prayer times; now data is only fetched when the date changes or cache is invalid.
+
+### Release Note
+- Fixed multiple fetches of prayer times; now data is only fetched when the date changes or cache is invalid.
+
 
 ## [v1.0.3] - 2025-07-03
 

@@ -2,7 +2,7 @@
   "name": "praytime-reminder",
   "displayName": "PrayTime Reminder",
   "description": "PrayTime Reminder is a Visual Studio Code extension designed for Muslim developers to help you never miss a prayer (sholat) while working.",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "engines": {
     "vscode": "^1.101.0"
   },
