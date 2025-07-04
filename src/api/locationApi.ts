@@ -7,6 +7,8 @@ export async function getUserLocationByIP(): Promise<UserLocation | null> {
   try {
     const res = await fetch('http://ip-api.com/json/');
     const data = (await res.json()) as { city: string; country: string };
+
+    console.log('Detected location by IP:', data);
     return {
       city: data.city,
       country: data.country

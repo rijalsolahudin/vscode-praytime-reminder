@@ -14,7 +14,7 @@ let lastLockResetKey: string | null = null;
 let soonPopupPendingPrayer: { prayer: string, adzanTime: Date, city: string, country: string, now: Date } | null = null;
 let adzanPopupPendingPrayer: { prayer: string, adzanTime: Date, time: string, city: string, country: string, timeZone: string, now: Date } | null = null;
 let cachedUserPrayData: { prayTimes: Record<string, string>, cityId: string, location: string, errorMsg: string } | null = null;
-let cachedDate: number | null = null;
+let cachedDate: string | null = null;
 
 // --- Status Bar Initialization ---
 function createStatusBar() {
@@ -42,23 +42,18 @@ function formatCountdownString(seconds: number): string {
 
 
 // --- Status Bar Update ---
-async function updateStatusBarText() {
-  await refreshCacheIfNeeded();
-  if (!statusBarItem || !cachedUserPrayData) {
+function updateStatusBarText(userPrayData: { prayTimes: Record<string, string>, errorMsg: string }) {
+  if (!statusBarItem) {
     return;
   }
-
-  const { prayTimes, errorMsg } = cachedUserPrayData;
-
+  const { prayTimes, errorMsg } = userPrayData;
   if (errorMsg) {
     statusBarItem.text = 'Jadwal Sholat: Gagal';
     statusBarItem.tooltip = errorMsg;
     statusBarItem.show();
     return;
   }
-
   const now = new Date();
-  // Use shared util for next prayer and countdown
   const { nextPrayer, prayerVars } = getNextPrayerVars(prayTimes as PrayTimes, now);
   const labelMap: Record<PrayKey, string> = {
     subuh: 'Subuh',
@@ -185,29 +180,15 @@ async function showAdzanPopup(prayer: string, adzanTime: Date, time: string, cit
   }
 }
 
-async function refreshCacheIfNeeded() {
-  const now = new Date();
-  if (!cachedDate || cachedDate !== now.getDate() || !cachedUserPrayData) {
-    cachedUserPrayData = await getUserPrayData();
-    cachedDate = now.getDate();
-  }
-}
-
 // --- Main function ---
-async function checkAndTriggerAdzan() {
-  await refreshCacheIfNeeded();
-  if (!cachedUserPrayData) {
-    return;
-  }
-  const { prayTimes, location, errorMsg } = cachedUserPrayData;
+async function checkAndTriggerAdzan(userPrayData: { prayTimes: Record<string, string>, location: string, errorMsg: string }) {
+  const { prayTimes, location, errorMsg } = userPrayData;
   if (errorMsg) {
     return;
   }
-
   const now = new Date();
   const order = ['subuh', 'dzuhur', 'ashar', 'maghrib', 'isya'] as const;
   const timeZone = getTimeZoneLabel();
-
   // RESET LOCK jika hari sudah berganti
   const today = now.getDate();
   if (!lastLockResetKey || !lastLockResetKey.endsWith(`-${today}`)) {
@@ -215,7 +196,6 @@ async function checkAndTriggerAdzan() {
     lastSoonTriggeredPrayer = null;
     lastLockResetKey = `reset-${today}`;
   }
-
   let currentPrayerIdx = -1;
   for (let i = order.length - 1; i >= 0; i--) {
     const adzanTime = getPrayerDateTime(prayTimes[order[i]], now);
@@ -224,7 +204,6 @@ async function checkAndTriggerAdzan() {
       break;
     }
   }
-
   for (const prayer of order) {
     const adzanTime = getPrayerDateTime(prayTimes[prayer], now);
     if (adzanTime && shouldShowSoonPopup(adzanTime, now, prayer)) {
@@ -237,14 +216,38 @@ async function checkAndTriggerAdzan() {
   }
 }
 
-// --- Interval Management ---
-function scheduleStatusBarUpdate() {
-  updateStatusBarText();
-  checkAndTriggerAdzan();
-  adzanInterval = setInterval(() => {
-    checkAndTriggerAdzan();
-    updateStatusBarText();
-  }, 1000); // setiap detik
+
+export async function refreshCacheIfNeeded() {
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const dd = String(now.getDate()).padStart(2, '0');
+  const todayStr = `${yyyy}/${mm}/${dd}`;
+  if (
+    !cachedDate ||
+    cachedDate !== todayStr ||
+    !cachedUserPrayData ||
+    (cachedUserPrayData && cachedUserPrayData.errorMsg)
+  ) {
+    cachedUserPrayData = await getUserPrayData();
+    cachedDate = todayStr;
+  }
+  return cachedUserPrayData;
+}
+
+export async function scheduleStatusBarUpdate() {
+  // Initial run
+  const userPrayData = await refreshCacheIfNeeded();
+  if (userPrayData) {
+    updateStatusBarText(userPrayData);
+    await checkAndTriggerAdzan(userPrayData);
+  }
+  adzanInterval = setInterval(async () => {
+    if (userPrayData) {
+      updateStatusBarText(userPrayData);
+      await checkAndTriggerAdzan(userPrayData);
+    }
+  }, 1000);
 }
 
 function clearStatusBarUpdate() {
