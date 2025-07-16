@@ -5,10 +5,14 @@ import { getRandomBackground } from '../utils/backgroundUtils';
 import { getRandomQuote } from '../utils/quoteUtils';
 import { getHijriDateString } from '../api/hijriDateApi';
 import { getUserPrayData } from '../api/getUserPrayData';
-import { getNextPrayerVars, PrayKey, PrayTimes, PrayerVars } from '../utils/prayerTimeUtils';
+import {
+  getNextPrayerVars,
+  PrayKey,
+  PrayTimes,
+  PrayerVars,
+} from '../utils/prayerTimeUtils';
 
 // --- Types ---
-
 
 export interface RenderWebviewHtmlParams {
   bg: { url: string };
@@ -24,7 +28,6 @@ export interface RenderWebviewHtmlParams {
   adzanAudioUrl: string;
 }
 
-
 function formatCountdownString(seconds: number): string {
   if (seconds <= 0) return 'sudah masuk waktu';
   const hours = Math.floor(seconds / 3600);
@@ -34,8 +37,6 @@ function formatCountdownString(seconds: number): string {
   if (mins > 0) return `Sekitar ${mins} menit ${secs} detik lagi`;
   return `Sekitar ${secs} detik lagi`;
 }
-
-
 
 /**
  * Injects dynamic data into the webview HTML template using {{PLACEHOLDER}} syntax.
@@ -47,8 +48,15 @@ function renderWebviewHtml(params: RenderWebviewHtmlParams): string {
   let html = fs.readFileSync(htmlPath, 'utf-8');
 
   // Inject quotes and backgrounds arrays as JS variables
-  const quotes = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../assets/quotes.json'), 'utf-8'));
-  const backgrounds = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../assets/backgrounds.json'), 'utf-8'));
+  const quotes = JSON.parse(
+    fs.readFileSync(path.resolve(__dirname, '../assets/quotes.json'), 'utf-8')
+  );
+  const backgrounds = JSON.parse(
+    fs.readFileSync(
+      path.resolve(__dirname, '../assets/backgrounds.json'),
+      'utf-8'
+    )
+  );
   const injectDataScript = `<script>window.quotes = ${JSON.stringify(quotes)}; window.backgrounds = ${JSON.stringify(backgrounds)};</script>`;
   html = html.replace('</head>', `${injectDataScript}\n</head>`);
 
@@ -66,16 +74,56 @@ function renderWebviewHtml(params: RenderWebviewHtmlParams): string {
     .replace(/{{PRAY_MAGHRIB}}/g, params.prayTimes.maghrib)
     .replace(/{{PRAY_ISYA}}/g, params.prayTimes.isya)
     .replace(/{{TIME_ZONE}}/g, params.timeZone)
-    .replace(/{{PRAY_SUBUH_IS_NEXT}}/g, params.nextPrayer === 'subuh' ? 'bg-green-500/30' : '')
-    .replace(/{{PRAY_DZUHUR_IS_NEXT}}/g, params.nextPrayer === 'dzuhur' ? 'bg-green-500/30' : '')
-    .replace(/{{PRAY_ASHAR_IS_NEXT}}/g, params.nextPrayer === 'ashar' ? 'bg-green-500/30' : '')
-    .replace(/{{PRAY_MAGHRIB_IS_NEXT}}/g, params.nextPrayer === 'maghrib' ? 'bg-green-500/30' : '')
-    .replace(/{{PRAY_ISYA_IS_NEXT}}/g, params.nextPrayer === 'isya' ? 'bg-green-500/30' : '')
-    .replace(/{{PRAY_SUBUH_COUNTDOWN}}/g, params.prayerVars.subuh ? formatCountdownString(params.prayerVars.subuh.countdownSeconds) : '')
-    .replace(/{{PRAY_DZUHUR_COUNTDOWN}}/g, params.prayerVars.dzuhur ? formatCountdownString(params.prayerVars.dzuhur.countdownSeconds) : '')
-    .replace(/{{PRAY_ASHAR_COUNTDOWN}}/g, params.prayerVars.ashar ? formatCountdownString(params.prayerVars.ashar.countdownSeconds) : '')
-    .replace(/{{PRAY_MAGHRIB_COUNTDOWN}}/g, params.prayerVars.maghrib ? formatCountdownString(params.prayerVars.maghrib.countdownSeconds) : '')
-    .replace(/{{PRAY_ISYA_COUNTDOWN}}/g, params.prayerVars.isya ? formatCountdownString(params.prayerVars.isya.countdownSeconds) : '')
+    .replace(
+      /{{PRAY_SUBUH_IS_NEXT}}/g,
+      params.nextPrayer === 'subuh' ? 'bg-green-500/30' : ''
+    )
+    .replace(
+      /{{PRAY_DZUHUR_IS_NEXT}}/g,
+      params.nextPrayer === 'dzuhur' ? 'bg-green-500/30' : ''
+    )
+    .replace(
+      /{{PRAY_ASHAR_IS_NEXT}}/g,
+      params.nextPrayer === 'ashar' ? 'bg-green-500/30' : ''
+    )
+    .replace(
+      /{{PRAY_MAGHRIB_IS_NEXT}}/g,
+      params.nextPrayer === 'maghrib' ? 'bg-green-500/30' : ''
+    )
+    .replace(
+      /{{PRAY_ISYA_IS_NEXT}}/g,
+      params.nextPrayer === 'isya' ? 'bg-green-500/30' : ''
+    )
+    .replace(
+      /{{PRAY_SUBUH_COUNTDOWN}}/g,
+      params.prayerVars.subuh
+        ? formatCountdownString(params.prayerVars.subuh.countdownSeconds)
+        : ''
+    )
+    .replace(
+      /{{PRAY_DZUHUR_COUNTDOWN}}/g,
+      params.prayerVars.dzuhur
+        ? formatCountdownString(params.prayerVars.dzuhur.countdownSeconds)
+        : ''
+    )
+    .replace(
+      /{{PRAY_ASHAR_COUNTDOWN}}/g,
+      params.prayerVars.ashar
+        ? formatCountdownString(params.prayerVars.ashar.countdownSeconds)
+        : ''
+    )
+    .replace(
+      /{{PRAY_MAGHRIB_COUNTDOWN}}/g,
+      params.prayerVars.maghrib
+        ? formatCountdownString(params.prayerVars.maghrib.countdownSeconds)
+        : ''
+    )
+    .replace(
+      /{{PRAY_ISYA_COUNTDOWN}}/g,
+      params.prayerVars.isya
+        ? formatCountdownString(params.prayerVars.isya.countdownSeconds)
+        : ''
+    )
     .replace(/{{NEXT_PRAYER_KEY}}/g, params.nextPrayer)
     .replace(/{{ERROR_MESSAGE}}/g, params.errorMsg)
     .replace(/{{ADZAN_AUDIO_URL}}/g, params.adzanAudioUrl);
@@ -92,7 +140,7 @@ function getMasehiDateString(): string {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
-    day: '2-digit'
+    day: '2-digit',
   });
 }
 
@@ -103,7 +151,13 @@ function getMasehiDateString(): string {
  */
 function getTimezone(tz: string): string {
   if (tz === 'Asia/Jakarta' || tz === 'Asia/Pontianak') return 'WIB';
-  if (tz === 'Asia/Makassar' || tz === 'Asia/Ujung_Pandang' || tz === 'Asia/Kendari' || tz === 'Asia/Palu') return 'WITA';
+  if (
+    tz === 'Asia/Makassar' ||
+    tz === 'Asia/Ujung_Pandang' ||
+    tz === 'Asia/Kendari' ||
+    tz === 'Asia/Palu'
+  )
+    return 'WITA';
   if (tz === 'Asia/Jayapura') return 'WIT';
   return tz;
 }
@@ -113,7 +167,9 @@ function getTimezone(tz: string): string {
  * This is the entry point called from the extension backend.
  * @returns The final HTML string for the webview
  */
-export async function getWebviewContent(adzanAudioUrl: string): Promise<string> {
+export async function getWebviewContent(
+  adzanAudioUrl: string
+): Promise<string> {
   const bg = getRandomBackground();
   const quote = getRandomQuote();
   const masehiDate = getMasehiDateString();
@@ -136,6 +192,6 @@ export async function getWebviewContent(adzanAudioUrl: string): Promise<string> 
     prayerVars,
     nextPrayer,
     errorMsg,
-    adzanAudioUrl
+    adzanAudioUrl,
   });
-} 
+}

@@ -3,9 +3,9 @@ import * as vscode from 'vscode';
 let lastWebviewPanel: vscode.WebviewPanel | undefined;
 
 export function setLastWebviewPanel(panel: vscode.WebviewPanel | undefined) {
-    lastWebviewPanel = panel;
+  lastWebviewPanel = panel;
 }
 
 export function getLastWebviewPanel(): vscode.WebviewPanel | undefined {
-    return lastWebviewPanel;
-} 
+  return lastWebviewPanel;
+}

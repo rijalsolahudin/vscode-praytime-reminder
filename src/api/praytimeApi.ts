@@ -1,4 +1,3 @@
-
 export interface PrayTimeResponse {
   imsak: string;
   subuh: string;
@@ -30,15 +29,15 @@ interface MyQuranJadwalResponse {
       ashar: string;
       maghrib: string;
       isya: string;
-    }
-  }
+    };
+  };
 }
 
-
-
-
 // Fetch prayer times by city ID and date (format: YYYY/MM/DD)
-export async function fetchPrayTimesByCityId(cityId: string, date: string): Promise<PrayTimeResponse | null> {
+export async function fetchPrayTimesByCityId(
+  cityId: string,
+  date: string
+): Promise<PrayTimeResponse | null> {
   // date format: YYYY/MM/DD, or use 'today' for current day
   const url = `https://api.myquran.com/v2/sholat/jadwal/${cityId}/${date}`;
   try {

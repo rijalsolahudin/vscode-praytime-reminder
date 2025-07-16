@@ -1,5 +1,3 @@
-
-
 import { fetchPrayTimesByCityId } from './praytimeApi';
 // import { searchCity } from './searchCityId'; // (not used in this file)
 
@@ -18,16 +16,20 @@ export async function getUserPrayTimes(cityId: string) {
         dzuhur: prayApi.dzuhur,
         ashar: prayApi.ashar,
         maghrib: prayApi.maghrib,
-        isya: prayApi.isya
+        isya: prayApi.isya,
       },
-      errorMsg: ''
+      errorMsg: '',
     };
   } else {
     return {
       prayTimes: {
-        subuh: '-', dzuhur: '-', ashar: '-', maghrib: '-', isya: '-'
+        subuh: '-',
+        dzuhur: '-',
+        ashar: '-',
+        maghrib: '-',
+        isya: '-',
       },
-      errorMsg: 'Gagal mengambil jadwal sholat dari API myQuran.'
+      errorMsg: 'Gagal mengambil jadwal sholat dari API myQuran.',
     };
   }
 }

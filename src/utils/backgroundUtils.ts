@@ -18,4 +18,4 @@ export function getRandomBackground(): Background {
     backgrounds = [{ url: '', author: '', source: '' }];
   }
   return backgrounds[Math.floor(Math.random() * backgrounds.length)];
-} 
+}

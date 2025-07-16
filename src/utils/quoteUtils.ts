@@ -18,4 +18,4 @@ export function getRandomQuote(): Quote {
     quotes = [{ arabic: '', translation: '', source: '' }];
   }
   return quotes[Math.floor(Math.random() * quotes.length)];
-} 
+}

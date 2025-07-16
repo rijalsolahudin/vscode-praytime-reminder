@@ -6,4 +6,4 @@ export async function getUserLocation() {
   const country = userLocation?.country || 'Indonesia';
   const locationString = `${city}, ${country}`;
   return { city, country, locationString };
-} 
+}
