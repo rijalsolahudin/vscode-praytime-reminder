@@ -37,7 +37,8 @@
     "watch": "tsc -watch -p ./",
     "pretest": "pnpm run compile && pnpm run lint",
     "lint": "eslint src",
-    "test": "vscode-test"
+    "test": "vscode-test",
+    "format": "prettier --ignore-path .gitignore --write \"**/*.+(js|ts|json)\""
   },
   "devDependencies": {
     "@types/mocha": "^10.0.10",
@@ -48,6 +49,8 @@
     "@vscode/test-cli": "^0.0.10",
     "@vscode/test-electron": "^2.5.2",
     "eslint": "^9.25.1",
+    "eslint-config-prettier": "^10.1.5",
+    "prettier": "^3.6.2",
     "typescript": "^5.8.3"
   },
   "icon": "images/icon.png",
