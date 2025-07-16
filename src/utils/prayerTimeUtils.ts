@@ -2,7 +2,10 @@
 
 export type PrayKey = 'subuh' | 'dzuhur' | 'ashar' | 'maghrib' | 'isya';
 export type PrayTimes = Record<PrayKey, string>;
-export type PrayerVars = Record<PrayKey, { rawTime: string; countdownSeconds: number }>;
+export type PrayerVars = Record<
+  PrayKey,
+  { rawTime: string; countdownSeconds: number }
+>;
 
 /**
  * Returns the difference in seconds between now and the target time (can be negative if past)
@@ -49,7 +52,10 @@ export function getNextPrayerVars(
   if (!order.every((k) => isValidTime(prayTimes[k]))) {
     order.forEach((k) => {
       if (!isValidTime(prayTimes[k])) {
-        console.warn(`[getNextPrayerVars] Invalid time for ${k}:`, prayTimes[k]);
+        console.warn(
+          `[getNextPrayerVars] Invalid time for ${k}:`,
+          prayTimes[k]
+        );
       }
     });
     return { nextPrayer, prayerVars };
@@ -68,11 +74,15 @@ export function getNextPrayerVars(
     return d;
   });
 
-
   // Find next and current prayer index
   let nextIdx = prayerTimesToday.findIndex((d) => d.getTime() > now.getTime());
   // If all times have passed, nextIdx = -1, so currentIdx = last prayer (isya)
-  let currentIdx = nextIdx === 0 ? order.length - 1 : (nextIdx === -1 ? order.length - 1 : nextIdx - 1);
+  let currentIdx =
+    nextIdx === 0
+      ? order.length - 1
+      : nextIdx === -1
+        ? order.length - 1
+        : nextIdx - 1;
 
   // Determine if within 15 minutes after current prayer
   let isWithin15Min = false;

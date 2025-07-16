@@ -12,7 +12,9 @@ export interface UserPrayData {
 export async function getUserPrayData(): Promise<UserPrayData> {
   console.log('[getUserPrayData] Start fetching user location...');
   const { city, locationString } = await getUserLocation();
-  console.log(`[getUserPrayData] User location: city="${city}", locationString="${locationString}"`);
+  console.log(
+    `[getUserPrayData] User location: city="${city}", locationString="${locationString}"`
+  );
 
   let cityId = '1301'; // Jakarta default
   let errorMsg = '';
@@ -30,7 +32,9 @@ export async function getUserPrayData(): Promise<UserPrayData> {
   const { prayTimes, errorMsg: prayError } = await getUserPrayTimes(cityId);
   if (prayError) {
     errorMsg = prayError;
-    console.error(`[getUserPrayData] Error fetching prayer times: ${prayError}`);
+    console.error(
+      `[getUserPrayData] Error fetching prayer times: ${prayError}`
+    );
   } else {
     console.log('[getUserPrayData] Prayer times fetched:', prayTimes);
   }

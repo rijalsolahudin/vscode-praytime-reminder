@@ -9,12 +9,12 @@ import { registerCommands } from './commands';
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
-	console.log('Extension "praytime-reminder" is now active!');
-	registerCommands(context);
-	startStatusBar();
+  console.log('Extension "praytime-reminder" is now active!');
+  registerCommands(context);
+  startStatusBar();
 }
 
 // This method is called when your extension is deactivated
 export function deactivate() {
-	disposeStatusBar();
+  disposeStatusBar();
 }

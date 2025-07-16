@@ -11,15 +11,37 @@ let adzanInterval: NodeJS.Timeout | undefined;
 let lastTriggeredPrayer: string | null = null;
 let lastSoonTriggeredPrayer: string | null = null;
 let lastLockResetKey: string | null = null;
-let soonPopupPendingPrayer: { prayer: string, adzanTime: Date, city: string, country: string, now: Date } | null = null;
-let adzanPopupPendingPrayer: { prayer: string, adzanTime: Date, time: string, city: string, country: string, timeZone: string, now: Date } | null = null;
-let cachedUserPrayData: { prayTimes: Record<string, string>, cityId: string, location: string, errorMsg: string } | null = null;
+let soonPopupPendingPrayer: {
+  prayer: string;
+  adzanTime: Date;
+  city: string;
+  country: string;
+  now: Date;
+} | null = null;
+let adzanPopupPendingPrayer: {
+  prayer: string;
+  adzanTime: Date;
+  time: string;
+  city: string;
+  country: string;
+  timeZone: string;
+  now: Date;
+} | null = null;
+let cachedUserPrayData: {
+  prayTimes: Record<string, string>;
+  cityId: string;
+  location: string;
+  errorMsg: string;
+} | null = null;
 let cachedDate: number | null = null;
 
 // --- Status Bar Initialization ---
 function createStatusBar() {
   if (!statusBarItem) {
-    statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
+    statusBarItem = vscode.window.createStatusBarItem(
+      vscode.StatusBarAlignment.Right,
+      100
+    );
     statusBarItem.command = 'praytime-reminder.openSettings';
   }
 }
@@ -40,7 +62,6 @@ function formatCountdownString(seconds: number): string {
   return `Sekitar ${secs} detik lagi`;
 }
 
-
 // --- Status Bar Update ---
 async function updateStatusBarText() {
   await refreshCacheIfNeeded();
@@ -59,7 +80,10 @@ async function updateStatusBarText() {
 
   const now = new Date();
   // Use shared util for next prayer and countdown
-  const { nextPrayer, prayerVars } = getNextPrayerVars(prayTimes as PrayTimes, now);
+  const { nextPrayer, prayerVars } = getNextPrayerVars(
+    prayTimes as PrayTimes,
+    now
+  );
   const labelMap: Record<PrayKey, string> = {
     subuh: 'Subuh',
     dzuhur: 'Dzuhur',
@@ -90,7 +114,10 @@ function getPrayerDisplayName(prayer: string): string {
   return map[prayer] || prayer;
 }
 
-function getPrayerDateTime(time: string | undefined, now: Date): Date | undefined {
+function getPrayerDateTime(
+  time: string | undefined,
+  now: Date
+): Date | undefined {
   if (!time) {
     return undefined;
   }
@@ -108,7 +135,12 @@ function getTimeZoneLabel(): string {
   if (tz === 'Asia/Jakarta' || tz === 'Asia/Pontianak') {
     return 'WIB';
   }
-  if (tz === 'Asia/Makassar' || tz === 'Asia/Ujung_Pandang' || tz === 'Asia/Kendari' || tz === 'Asia/Palu') {
+  if (
+    tz === 'Asia/Makassar' ||
+    tz === 'Asia/Ujung_Pandang' ||
+    tz === 'Asia/Kendari' ||
+    tz === 'Asia/Palu'
+  ) {
     return 'WITA';
   }
   if (tz === 'Asia/Jayapura') {
@@ -117,17 +149,25 @@ function getTimeZoneLabel(): string {
   return tz;
 }
 
-function shouldShowSoonPopup(adzanTime: Date, now: Date, prayer: string): boolean {
+function shouldShowSoonPopup(
+  adzanTime: Date,
+  now: Date,
+  prayer: string
+): boolean {
   const soonKey = `${prayer}-soon-${now.getDate()}`;
   const diff = adzanTime.getTime() - now.getTime();
   return (
-    diff > 0 &&
-    diff <= 5 * 60 * 1000 &&
-    lastSoonTriggeredPrayer !== soonKey
+    diff > 0 && diff <= 5 * 60 * 1000 && lastSoonTriggeredPrayer !== soonKey
   );
 }
 
-async function showSoonPopup(prayer: string, adzanTime: Date, city: string, country: string, now: Date) {
+async function showSoonPopup(
+  prayer: string,
+  adzanTime: Date,
+  city: string,
+  country: string,
+  now: Date
+) {
   const soonKey = `${prayer}-soon-${now.getDate()}`;
   const sendSoonPopup = () => {
     const panel = getLastWebviewPanel();
@@ -137,14 +177,18 @@ async function showSoonPopup(prayer: string, adzanTime: Date, city: string, coun
         showAdzanSoonPopup: true,
         prayerName: getPrayerDisplayName(prayer),
         location: `${city}, ${country}`,
-        secondsLeft: Math.floor((adzanTime.getTime() - now.getTime()) / 1000)
+        secondsLeft: Math.floor((adzanTime.getTime() - now.getTime()) / 1000),
       });
       lastSoonTriggeredPrayer = soonKey;
       soonPopupPendingPrayer = null;
     }
   };
   if (!getLastWebviewPanel()) {
-    if (!soonPopupPendingPrayer || soonPopupPendingPrayer.prayer !== prayer || soonPopupPendingPrayer.now.getDate() !== now.getDate()) {
+    if (
+      !soonPopupPendingPrayer ||
+      soonPopupPendingPrayer.prayer !== prayer ||
+      soonPopupPendingPrayer.now.getDate() !== now.getDate()
+    ) {
       soonPopupPendingPrayer = { prayer, adzanTime, city, country, now };
       await triggerAdzanReminder();
     }
@@ -153,12 +197,28 @@ async function showSoonPopup(prayer: string, adzanTime: Date, city: string, coun
   }
 }
 
-function shouldShowAdzanPopup(adzanTime: Date, now: Date, prayer: string): boolean {
+function shouldShowAdzanPopup(
+  adzanTime: Date,
+  now: Date,
+  prayer: string
+): boolean {
   const adzanKey = `${prayer}-${now.getDate()}`;
-  return now.getHours() === adzanTime.getHours() && now.getMinutes() === adzanTime.getMinutes() && lastTriggeredPrayer !== adzanKey;
+  return (
+    now.getHours() === adzanTime.getHours() &&
+    now.getMinutes() === adzanTime.getMinutes() &&
+    lastTriggeredPrayer !== adzanKey
+  );
 }
 
-async function showAdzanPopup(prayer: string, adzanTime: Date, time: string, city: string, country: string, timeZone: string, now: Date) {
+async function showAdzanPopup(
+  prayer: string,
+  adzanTime: Date,
+  time: string,
+  city: string,
+  country: string,
+  timeZone: string,
+  now: Date
+) {
   const adzanKey = `${prayer}-${now.getDate()}`;
   const sendAdzanPopup = () => {
     const panel = getLastWebviewPanel();
@@ -169,15 +229,27 @@ async function showAdzanPopup(prayer: string, adzanTime: Date, time: string, cit
         prayerName: getPrayerDisplayName(prayer),
         time,
         location: `${city}, ${country}`,
-        timeZone
+        timeZone,
       });
       lastTriggeredPrayer = adzanKey;
       adzanPopupPendingPrayer = null;
     }
   };
   if (!getLastWebviewPanel()) {
-    if (!adzanPopupPendingPrayer || adzanPopupPendingPrayer.prayer !== prayer || adzanPopupPendingPrayer.now.getDate() !== now.getDate()) {
-      adzanPopupPendingPrayer = { prayer, adzanTime, time, city, country, timeZone, now };
+    if (
+      !adzanPopupPendingPrayer ||
+      adzanPopupPendingPrayer.prayer !== prayer ||
+      adzanPopupPendingPrayer.now.getDate() !== now.getDate()
+    ) {
+      adzanPopupPendingPrayer = {
+        prayer,
+        adzanTime,
+        time,
+        city,
+        country,
+        timeZone,
+        now,
+      };
       await triggerAdzanReminder();
     }
   } else {
@@ -231,7 +303,15 @@ async function checkAndTriggerAdzan() {
       await showSoonPopup(prayer, adzanTime, location, '', now);
     }
     if (adzanTime && shouldShowAdzanPopup(adzanTime, now, prayer)) {
-      await showAdzanPopup(prayer, adzanTime, prayTimes[prayer], location, '', timeZone, now);
+      await showAdzanPopup(
+        prayer,
+        adzanTime,
+        prayTimes[prayer],
+        location,
+        '',
+        timeZone,
+        now
+      );
       break;
     }
   }
@@ -273,8 +353,11 @@ export function disposeStatusBar() {
 }
 
 // PATCH: Listen webview ready event to send pending soon/adzan popup
-if (typeof getLastWebviewPanel() !== 'undefined' && getLastWebviewPanel() !== null) {
-  getLastWebviewPanel()!.webview.onDidReceiveMessage(msg => {
+if (
+  typeof getLastWebviewPanel() !== 'undefined' &&
+  getLastWebviewPanel() !== null
+) {
+  getLastWebviewPanel()!.webview.onDidReceiveMessage((msg) => {
     if (msg.ready && soonPopupPendingPrayer) {
       const { prayer, adzanTime, city, country, now } = soonPopupPendingPrayer;
       const soonKey = `${prayer}-soon-${now.getDate()}`;
@@ -282,23 +365,24 @@ if (typeof getLastWebviewPanel() !== 'undefined' && getLastWebviewPanel() !== nu
         showAdzanSoonPopup: true,
         prayerName: getPrayerDisplayName(prayer),
         location: `${city}, ${country}`,
-        secondsLeft: Math.floor((adzanTime.getTime() - now.getTime()) / 1000)
+        secondsLeft: Math.floor((adzanTime.getTime() - now.getTime()) / 1000),
       });
       lastSoonTriggeredPrayer = soonKey;
       soonPopupPendingPrayer = null;
     }
     if (msg.ready && adzanPopupPendingPrayer) {
-      const { prayer, adzanTime, time, city, country, timeZone, now } = adzanPopupPendingPrayer;
+      const { prayer, adzanTime, time, city, country, timeZone, now } =
+        adzanPopupPendingPrayer;
       const adzanKey = `${prayer}-${now.getDate()}`;
       getLastWebviewPanel()!.webview.postMessage({
         showAdzanPopup: true,
         prayerName: getPrayerDisplayName(prayer),
         time,
         location: `${city}, ${country}`,
-        timeZone
+        timeZone,
       });
       lastTriggeredPrayer = adzanKey;
       adzanPopupPendingPrayer = null;
     }
   });
-} 
+}
