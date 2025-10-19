@@ -382,6 +382,21 @@
       </div>
     </div>
   </div>
+  <!-- Soon Popup (5 min before) - Lower z-index -->
+  <div id="adzan-soon-popup" class="fixed inset-0 z-[50000] flex items-center justify-center p-4" style="display:none; background:rgba(24,24,27,0.18);">
+    <div class="backdrop-blur-xl bg-white/80 border border-white/40 shadow-2xl rounded-2xl sm:rounded-3xl px-4 sm:px-6 md:px-8 py-4 sm:py-6 md:py-7 max-w-[95vw] w-full max-w-sm flex flex-col items-center text-center relative">
+      <div id="adzan-soon-popup-icon" class="mb-2"></div>
+      <div id="adzan-soon-popup-title" class="text-sm sm:text-base text-gray-700 mb-2 tracking-tight leading-tight"></div>
+      <div id="adzan-soon-popup-countdown-row" class="flex items-end justify-center mb-1">
+        <div id="adzan-soon-popup-countdown" class="text-3xl sm:text-4xl md:text-5xl font-extrabold text-gray-800"></div>
+        <div id="adzan-soon-popup-tz" class="text-sm sm:text-base md:text-lg text-gray-400 font-semibold ml-1 sm:ml-2 pb-1"></div>
+      </div>
+      <div id="adzan-soon-popup-location" class="text-sm sm:text-base text-gray-500 mb-4 sm:mb-5"></div>
+      <button id="adzan-soon-popup-close" class="w-full py-2 rounded-lg sm:rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-500 font-semibold text-sm sm:text-base transition">Tutup</button>
+    </div>
+  </div>
+  
+  <!-- Adzan Popup (exact time) - Higher z-index -->
   <div id="adzan-popup" class="fixed inset-0 z-[99999] flex items-center justify-center p-4" style="display:none; background:rgba(24,24,27,0.18);">
     <div class="backdrop-blur-xl bg-white/80 border border-white/40 shadow-2xl rounded-2xl sm:rounded-3xl px-4 sm:px-6 md:px-8 py-4 sm:py-6 md:py-7 max-w-[95vw] w-full max-w-sm flex flex-col items-center text-center relative">
       <div id="adzan-popup-icon" class="mb-2"></div>
@@ -393,19 +408,6 @@
       <div id="adzan-popup-location" class="text-sm sm:text-base text-gray-500 mb-4 sm:mb-5"></div>
       <button id="adzan-popup-play" class="w-full py-2.5 sm:py-3 rounded-lg sm:rounded-xl bg-green-500 hover:bg-green-600 text-white font-bold text-base sm:text-lg shadow-lg transition mb-2">Sudah Sholat</button>
       <button id="adzan-popup-close" class="w-full py-2 rounded-lg sm:rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-500 font-semibold text-sm sm:text-base transition">Tutup</button>
-    </div>
-  </div>
-  
-  <div id="adzan-soon-popup" class="fixed inset-0 z-[99999] flex items-center justify-center p-4" style="display:none; background:rgba(24,24,27,0.18);">
-    <div class="backdrop-blur-xl bg-white/80 border border-white/40 shadow-2xl rounded-2xl sm:rounded-3xl px-4 sm:px-6 md:px-8 py-4 sm:py-6 md:py-7 max-w-[95vw] w-full max-w-sm flex flex-col items-center text-center relative">
-      <div id="adzan-soon-popup-icon" class="mb-2"></div>
-      <div id="adzan-soon-popup-title" class="text-sm sm:text-base text-gray-700 mb-2 tracking-tight leading-tight"></div>
-      <div id="adzan-soon-popup-countdown-row" class="flex items-end justify-center mb-1">
-        <div id="adzan-soon-popup-countdown" class="text-3xl sm:text-4xl md:text-5xl font-extrabold text-gray-800"></div>
-        <div id="adzan-soon-popup-tz" class="text-sm sm:text-base md:text-lg text-gray-400 font-semibold ml-1 sm:ml-2 pb-1"></div>
-      </div>
-      <div id="adzan-soon-popup-location" class="text-sm sm:text-base text-gray-500 mb-4 sm:mb-5"></div>
-      <button id="adzan-soon-popup-close" class="w-full py-2 rounded-lg sm:rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-500 font-semibold text-sm sm:text-base transition">Tutup</button>
     </div>
   </div>
   <audio id="adzan-audio" src="{{ADZAN_AUDIO_URL}}"></audio>
@@ -492,6 +494,14 @@
     }
 
     function showAdzanPopup({ prayerName, time, location, timeZone }) {
+      // Hide soon popup if it's showing (adzan popup takes priority)
+      document.getElementById('adzan-soon-popup').style.display = 'none';
+      if (adzanSoonCountdownInterval) {
+        clearInterval(adzanSoonCountdownInterval);
+        adzanSoonCountdownInterval = null;
+      }
+      
+      // Show adzan popup
       document.getElementById('adzan-popup-icon').innerHTML = getPrayerIcon(prayerName);
       document.getElementById('adzan-popup-title').textContent = `Saatnya adzan ${prayerName} untuk wilayah ${location} dan sekitarnya.`;
       document.getElementById('adzan-popup-time').textContent = time;

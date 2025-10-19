@@ -19,8 +19,6 @@ let adzanInterval: NodeJS.Timeout | undefined;
 let lastTriggeredPrayer: string | null = null;
 let lastSoonTriggeredPrayer: string | null = null;
 let lastLockResetKey: string | null = null;
-let soonPopupPendingPrayer: { prayer: string, adzanTime: Date, city: string, country: string, now: Date } | null = null;
-let adzanPopupPendingPrayer: { prayer: string, adzanTime: Date, time: string, city: string, country: string, timeZone: string, now: Date } | null = null;
 let cachedUserPrayData: { prayTimes: Record<string, string>, cityId: string, location: string, errorMsg: string } | null = null;
 let cachedDate: string | null = null;
 let retryCount: number = 0;
@@ -64,7 +62,7 @@ function updateStatusBarText(userPrayData: { prayTimes: Record<string, string>, 
   // Show retry status
   if (isRetrying) {
     const dots = '.'.repeat((retryCount % 3) + 1);
-    statusBarItem.text = `🕌 Mengambil Ulang${dots}`;
+    statusBarItem.text = `$(sync~spin) Mengambil Ulang${dots}`;
     statusBarItem.tooltip = `Percobaan ke-${retryCount + 1}. ${errorMsg || 'Mencoba mengambil data jadwal sholat...'}`;
     statusBarItem.show();
     return;
@@ -73,10 +71,10 @@ function updateStatusBarText(userPrayData: { prayTimes: Record<string, string>, 
   if (errorMsg) {
     const maxRetriesReached = retryCount >= 10;
     if (maxRetriesReached) {
-      statusBarItem.text = `🕌 Jadwal Sholat: Gagal (Max Retry)`;
+      statusBarItem.text = `$(error) Jadwal Sholat: Gagal (Max Retry)`;
       statusBarItem.tooltip = `${errorMsg}\n\nSudah mencoba 10 kali. Akan retry lagi besok.`;
     } else {
-      statusBarItem.text = `🕌 Jadwal Sholat: Gagal (Retry ${retryCount})`;
+      statusBarItem.text = `$(warning) Jadwal Sholat: Gagal (Retry ${retryCount})`;
       statusBarItem.tooltip = `${errorMsg}\n\nMencoba lagi dalam beberapa detik...`;
     }
     statusBarItem.show();
@@ -92,12 +90,12 @@ function updateStatusBarText(userPrayData: { prayTimes: Record<string, string>, 
     maghrib: 'Maghrib',
     isya: 'Isya',
   };
-  let text = '🕌 Jadwal Sholat';
+  let text = '$(praytime-logo) Jadwal Sholat';
   if (nextPrayer && nextPrayer in prayTimes) {
     const rawTime = prayerVars[nextPrayer].rawTime;
     const countdownSeconds = prayerVars[nextPrayer].countdownSeconds;
     const countdownString = formatCountdownString(countdownSeconds);
-    text = `🕌 ${labelMap[nextPrayer]} ${rawTime} — ${countdownString}`;
+    text = `$(praytime-logo) ${labelMap[nextPrayer]} ${rawTime} — ${countdownString}`;
   }
   statusBarItem.text = text;
   statusBarItem.tooltip = 'Klik untuk lihat jadwal sholat lengkap';
@@ -251,7 +249,6 @@ async function showSoonPopup(prayer: string, adzanTime: Date, city: string, coun
   
   // Mark as triggered
   lastSoonTriggeredPrayer = soonKey;
-  soonPopupPendingPrayer = null;
 }
 
 /**
@@ -408,7 +405,6 @@ async function showAdzanPopup(prayer: string, adzanTime: Date, time: string, cit
   
   // Mark as triggered
   lastTriggeredPrayer = adzanKey;
-  adzanPopupPendingPrayer = null;
 }
 
 // --- Main function ---
@@ -591,33 +587,4 @@ export function disposeStatusBar() {
   }
 }
 
-// PATCH: Listen webview ready event to send pending soon/adzan popup
-if (typeof getLastWebviewPanel() !== 'undefined' && getLastWebviewPanel() !== null) {
-  getLastWebviewPanel()!.webview.onDidReceiveMessage(msg => {
-    if (msg.ready && soonPopupPendingPrayer) {
-      const { prayer, adzanTime, city, country, now } = soonPopupPendingPrayer;
-      const soonKey = `${prayer}-soon-${now.getDate()}`;
-      getLastWebviewPanel()!.webview.postMessage({
-        showAdzanSoonPopup: true,
-        prayerName: getPrayerDisplayName(prayer),
-        location: `${city}, ${country}`,
-        secondsLeft: Math.floor((adzanTime.getTime() - now.getTime()) / 1000)
-      });
-      lastSoonTriggeredPrayer = soonKey;
-      soonPopupPendingPrayer = null;
-    }
-    if (msg.ready && adzanPopupPendingPrayer) {
-      const { prayer, adzanTime, time, city, country, timeZone, now } = adzanPopupPendingPrayer;
-      const adzanKey = `${prayer}-${now.getDate()}`;
-      getLastWebviewPanel()!.webview.postMessage({
-        showAdzanPopup: true,
-        prayerName: getPrayerDisplayName(prayer),
-        time,
-        location: `${city}, ${country}`,
-        timeZone
-      });
-      lastTriggeredPrayer = adzanKey;
-      adzanPopupPendingPrayer = null;
-    }
-  });
-} 
+// NOTE: Pending popup logic removed - now handled via setTimeout in core functions   
