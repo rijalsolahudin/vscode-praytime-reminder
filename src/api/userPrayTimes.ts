@@ -27,7 +27,7 @@ export async function getUserPrayTimes(cityId: string) {
       prayTimes: {
         subuh: '-', dzuhur: '-', ashar: '-', maghrib: '-', isya: '-'
       },
-      errorMsg: 'Gagal mengambil jadwal sholat dari API myQuran.'
+      errorMsg: 'Gagal mengambil jadwal sholat dari API.'
     };
   }
 }

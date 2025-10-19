@@ -15,6 +15,9 @@ let soonPopupPendingPrayer: { prayer: string, adzanTime: Date, city: string, cou
 let adzanPopupPendingPrayer: { prayer: string, adzanTime: Date, time: string, city: string, country: string, timeZone: string, now: Date } | null = null;
 let cachedUserPrayData: { prayTimes: Record<string, string>, cityId: string, location: string, errorMsg: string } | null = null;
 let cachedDate: string | null = null;
+let retryCount: number = 0;
+let isRetrying: boolean = false;
+let retryTimeout: NodeJS.Timeout | undefined;
 
 // --- Status Bar Initialization ---
 function createStatusBar() {
@@ -46,13 +49,31 @@ function updateStatusBarText(userPrayData: { prayTimes: Record<string, string>, 
   if (!statusBarItem) {
     return;
   }
+
   const { prayTimes, errorMsg } = userPrayData;
-  if (errorMsg) {
-    statusBarItem.text = 'Jadwal Sholat: Gagal';
-    statusBarItem.tooltip = errorMsg;
+  
+  // Show retry status
+  if (isRetrying) {
+    const dots = '.'.repeat((retryCount % 3) + 1);
+    statusBarItem.text = `🕌 Mengambil Ulang${dots}`;
+    statusBarItem.tooltip = `Percobaan ke-${retryCount + 1}. ${errorMsg || 'Mencoba mengambil data jadwal sholat...'}`;
     statusBarItem.show();
     return;
   }
+  
+  if (errorMsg) {
+    const maxRetriesReached = retryCount >= 10;
+    if (maxRetriesReached) {
+      statusBarItem.text = `🕌 Jadwal Sholat: Gagal (Max Retry)`;
+      statusBarItem.tooltip = `${errorMsg}\n\nSudah mencoba 10 kali. Akan retry lagi besok.`;
+    } else {
+      statusBarItem.text = `🕌 Jadwal Sholat: Gagal (Retry ${retryCount})`;
+      statusBarItem.tooltip = `${errorMsg}\n\nMencoba lagi dalam beberapa detik...`;
+    }
+    statusBarItem.show();
+    return;
+  }
+  
   const now = new Date();
   const { nextPrayer, prayerVars } = getNextPrayerVars(prayTimes as PrayTimes, now);
   const labelMap: Record<PrayKey, string> = {
@@ -217,36 +238,110 @@ async function checkAndTriggerAdzan(userPrayData: { prayTimes: Record<string, st
 }
 
 
+/**
+ * Schedule retry with exponential backoff
+ * Retry delays: 5s, 10s, 20s, 40s, 60s (max)
+ */
+function scheduleRetry() {
+  // Prevent multiple retry scheduling
+  if (retryTimeout) {
+    console.log('[scheduleRetry] Retry already scheduled, skipping...');
+    return;
+  }
+  
+  // Calculate delay with exponential backoff (max 60 seconds)
+  const baseDelay = 5000; // 5 seconds
+  const maxDelay = 60000; // 60 seconds
+  const delay = Math.min(baseDelay * Math.pow(2, retryCount), maxDelay);
+  
+  console.log(`[scheduleRetry] Scheduling retry #${retryCount + 1} in ${delay / 1000} seconds`);
+  
+  isRetrying = false;
+  retryTimeout = setTimeout(async () => {
+    console.log(`[scheduleRetry] Executing retry #${retryCount + 1}`);
+    isRetrying = true;
+    retryCount++;
+    
+    // Fetch new data
+    const result = await getUserPrayData();
+    
+    if (!result.errorMsg) {
+      // Success! Reset retry count
+      console.log('[scheduleRetry] Retry successful! Resetting retry count.');
+      retryCount = 0;
+      isRetrying = false;
+      cachedUserPrayData = result;
+      const now = new Date();
+      const yyyy = now.getFullYear();
+      const mm = String(now.getMonth() + 1).padStart(2, '0');
+      const dd = String(now.getDate()).padStart(2, '0');
+      cachedDate = `${yyyy}/${mm}/${dd}`;
+    } else {
+      // Still error, schedule another retry
+      console.error(`[scheduleRetry] Retry #${retryCount} failed:`, result.errorMsg);
+      cachedUserPrayData = result;
+      isRetrying = false;
+      
+      // Max retry attempts: 10
+      if (retryCount < 10) {
+        retryTimeout = undefined; // Clear before recursive call
+        scheduleRetry();
+      } else {
+        console.error('[scheduleRetry] Max retry attempts reached. Will retry when day changes.');
+      }
+    }
+  }, delay);
+}
+
 export async function refreshCacheIfNeeded() {
   const now = new Date();
   const yyyy = now.getFullYear();
   const mm = String(now.getMonth() + 1).padStart(2, '0');
   const dd = String(now.getDate()).padStart(2, '0');
   const todayStr = `${yyyy}/${mm}/${dd}`;
-  if (
+  
+  const needsRefresh = 
     !cachedDate ||
     cachedDate !== todayStr ||
-    !cachedUserPrayData ||
-    (cachedUserPrayData && cachedUserPrayData.errorMsg)
-  ) {
+    !cachedUserPrayData;
+  
+  if (needsRefresh) {
+    console.log('[refreshCacheIfNeeded] Fetching new data...');
+    isRetrying = true;
     cachedUserPrayData = await getUserPrayData();
     cachedDate = todayStr;
+    isRetrying = false;
+    
+    // If error, schedule retry (only if not already retrying)
+    if (cachedUserPrayData && cachedUserPrayData.errorMsg) {
+      console.error('[refreshCacheIfNeeded] Error fetching data:', cachedUserPrayData.errorMsg);
+      retryCount = 0; // Reset retry count for new day
+      scheduleRetry();
+    } else {
+      // Success, reset retry count
+      console.log('[refreshCacheIfNeeded] Data fetched successfully!');
+      retryCount = 0;
+      isRetrying = false;
+    }
   }
+  // REMOVED: The problematic else-if that caused infinite loop
+  
   return cachedUserPrayData;
 }
 
-export async function scheduleStatusBarUpdate() {
-  // Initial run
+async function performStatusBarUpdate() {
   const userPrayData = await refreshCacheIfNeeded();
   if (userPrayData) {
     updateStatusBarText(userPrayData);
     await checkAndTriggerAdzan(userPrayData);
   }
+}
+
+export async function scheduleStatusBarUpdate() {
+  // Initial run
+  await performStatusBarUpdate();
   adzanInterval = setInterval(async () => {
-    if (userPrayData) {
-      updateStatusBarText(userPrayData);
-      await checkAndTriggerAdzan(userPrayData);
-    }
+    await performStatusBarUpdate();
   }, 1000);
 }
 
@@ -259,6 +354,13 @@ function clearStatusBarUpdate() {
     clearInterval(adzanInterval);
     adzanInterval = undefined;
   }
+  if (retryTimeout) {
+    clearTimeout(retryTimeout);
+    retryTimeout = undefined;
+  }
+  // Reset retry state
+  retryCount = 0;
+  isRetrying = false;
 }
 
 // --- Public API ---
