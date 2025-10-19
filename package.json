@@ -21,7 +21,11 @@
       },
       {
         "command": "praytime-reminder.testAdzan",
-        "title": "PrayTime Reminder : Test Adzan PrayTime Reminder"
+        "title": "PrayTime Reminder : Test Adzan (Waktu Tiba)"
+      },
+      {
+        "command": "praytime-reminder.testSoonNotification",
+        "title": "PrayTime Reminder : Test Notifikasi (5 Menit Sebelum)"
       },
       {
         "command": "praytime-reminder.stopAdzan",

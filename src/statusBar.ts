@@ -152,30 +152,106 @@ function shouldShowSoonPopup(adzanTime: Date, now: Date, prayer: string): boolea
   );
 }
 
+/**
+ * Play notification sound using system beep
+ * Cross-platform support for notification sound
+ * Only plays ONE sound (no multiple/duplicate sounds)
+ */
+function playNotificationSound() {
+  try {
+    const { exec } = require('child_process');
+    
+    if (process.platform === 'linux') {
+      // Linux: Try notification sound with single command (first available)
+      exec('paplay /usr/share/sounds/freedesktop/stereo/message.oga 2>/dev/null || paplay /usr/share/sounds/freedesktop/stereo/bell.oga 2>/dev/null || beep 2>/dev/null', 
+        (error: any) => {
+          if (!error) {
+            console.log('[playNotificationSound] ✅ Played notification sound (Linux)');
+          } else {
+            console.log('[playNotificationSound] No notification sound available (Linux)');
+          }
+        }
+      );
+    } else if (process.platform === 'darwin') {
+      // macOS: Play Glass sound (default notification sound)
+      exec('afplay /System/Library/Sounds/Glass.aiff', (error: any) => {
+        if (!error) {
+          console.log('[playNotificationSound] ✅ Played notification sound (macOS)');
+        } else {
+          console.log('[playNotificationSound] No notification sound available (macOS)');
+        }
+      });
+    } else if (process.platform === 'win32') {
+      // Windows: Use powershell beep (800Hz, 300ms)
+      exec('powershell -c "[Console]::Beep(800, 300)"', (error: any) => {
+        if (!error) {
+          console.log('[playNotificationSound] ✅ Played notification sound (Windows)');
+        } else {
+          console.log('[playNotificationSound] No notification sound available (Windows)');
+        }
+      });
+    }
+  } catch (error) {
+    console.error('[playNotificationSound] Error playing notification sound:', error);
+  }
+}
+
+/**
+ * Trigger soon notification (5 minutes before adzan)
+ * This is the CORE function used by both real soon notification and test
+ * @param prayerName Display name (e.g., "Subuh", "Dzuhur")
+ * @param minutesLeft Minutes until adzan (e.g., 5)
+ * @param location Location string (e.g., "Jakarta, Indonesia")
+ */
+export async function triggerSoonNotification(prayerName: string, minutesLeft: number, location: string) {
+  console.log('[triggerSoonNotification] Triggering soon notification for:', prayerName, `(${minutesLeft} min)`);
+  
+  // 1. Play notification sound
+  playNotificationSound();
+  
+  // 2. Show OS system notification (no button, just info)
+  vscode.window.showInformationMessage(
+    `🕌 ${prayerName} dalam ${minutesLeft} menit`
+  );
+  
+  // 3. Open/reveal webview panel
+  const panel = getLastWebviewPanel();
+  if (!panel) {
+    await triggerAdzanReminder();
+  } else {
+    panel.reveal(vscode.ViewColumn.One);
+  }
+  
+  // 4. Send popup message to webview
+  setTimeout(() => {
+    const currentPanel = getLastWebviewPanel();
+    if (currentPanel) {
+      currentPanel.webview.postMessage({
+        showAdzanSoonPopup: true,
+        prayerName,
+        location,
+        secondsLeft: minutesLeft * 60
+      });
+      console.log('[triggerSoonNotification] Soon popup message sent to webview');
+    }
+  }, 700); // Wait for webview to be ready
+}
+
 async function showSoonPopup(prayer: string, adzanTime: Date, city: string, country: string, now: Date) {
   const soonKey = `${prayer}-soon-${now.getDate()}`;
-  const sendSoonPopup = () => {
-    const panel = getLastWebviewPanel();
-    if (panel) {
-      panel.reveal(vscode.ViewColumn.One); // Pindahkan fokus ke webview
-      panel.webview.postMessage({
-        showAdzanSoonPopup: true,
-        prayerName: getPrayerDisplayName(prayer),
-        location: `${city}, ${country}`,
-        secondsLeft: Math.floor((adzanTime.getTime() - now.getTime()) / 1000)
-      });
-      lastSoonTriggeredPrayer = soonKey;
-      soonPopupPendingPrayer = null;
-    }
-  };
-  if (!getLastWebviewPanel()) {
-    if (!soonPopupPendingPrayer || soonPopupPendingPrayer.prayer !== prayer || soonPopupPendingPrayer.now.getDate() !== now.getDate()) {
-      soonPopupPendingPrayer = { prayer, adzanTime, city, country, now };
-      await triggerAdzanReminder();
-    }
-  } else {
-    sendSoonPopup();
-  }
+  const prayerName = getPrayerDisplayName(prayer);
+  const minutesLeft = Math.floor((adzanTime.getTime() - now.getTime()) / 60000);
+  
+  // Use the core soon notification function
+  await triggerSoonNotification(
+    prayerName,
+    minutesLeft,
+    `${city}, ${country}`
+  );
+  
+  // Mark as triggered
+  lastSoonTriggeredPrayer = soonKey;
+  soonPopupPendingPrayer = null;
 }
 
 /**

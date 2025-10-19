@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import { getWebviewContent } from './webview/getWebviewContent';
 import { setLastWebviewPanel, getLastWebviewPanel } from './panelManager';
-import { stopAdzanAudio, triggerAdzanNotification } from './statusBar';
+import { stopAdzanAudio, triggerAdzanNotification, triggerSoonNotification } from './statusBar';
 
 export async function triggerAdzanReminder() {
 	const panel = getLastWebviewPanel();
@@ -74,7 +74,21 @@ export function registerCommands(context: vscode.ExtensionContext) {
 		console.log('[testAdzan] Test adzan triggered successfully');
 	});
 
+	const testSoonNotification = vscode.commands.registerCommand('praytime-reminder.testSoonNotification', async () => {
+		// Use the SAME function as real soon notification (consistency!)
+		console.log('[testSoonNotification] Triggering test soon notification');
+		
+		await triggerSoonNotification(
+			'Dzuhur',                   // Test prayer name
+			5,                          // Test minutes left
+			'Jakarta, Indonesia'        // Test location
+		);
+		
+		console.log('[testSoonNotification] Test soon notification triggered successfully');
+	});
+
 	context.subscriptions.push(openSettings);
 	context.subscriptions.push(testAdzan);
+	context.subscriptions.push(testSoonNotification);
 	context.subscriptions.push(stopAdzan);
 } 
