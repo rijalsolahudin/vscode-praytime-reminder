@@ -391,7 +391,7 @@
         <div id="adzan-popup-tz" class="text-sm sm:text-base md:text-lg text-gray-400 font-semibold ml-1 sm:ml-2 pb-1"></div>
       </div>
       <div id="adzan-popup-location" class="text-sm sm:text-base text-gray-500 mb-4 sm:mb-5"></div>
-      <button id="adzan-popup-play" class="w-full py-2.5 sm:py-3 rounded-lg sm:rounded-xl bg-green-500 hover:bg-green-600 text-white font-bold text-base sm:text-lg shadow-lg transition mb-2">Mulai Adzan</button>
+      <button id="adzan-popup-play" class="w-full py-2.5 sm:py-3 rounded-lg sm:rounded-xl bg-green-500 hover:bg-green-600 text-white font-bold text-base sm:text-lg shadow-lg transition mb-2">Sudah Sholat</button>
       <button id="adzan-popup-close" class="w-full py-2 rounded-lg sm:rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-500 font-semibold text-sm sm:text-base transition">Tutup</button>
     </div>
   </div>
@@ -501,14 +501,18 @@
     }
     function hideAdzanPopup() {
       document.getElementById('adzan-popup').style.display = 'none';
+      
+      // Send message to extension to stop adzan audio
+      if (window.acquireVsCodeApi) {
+        const vscode = acquireVsCodeApi();
+        vscode.postMessage({ stopAdzan: true });
+      }
     }
     document.getElementById('adzan-popup-close').onclick = hideAdzanPopup;
     document.getElementById('adzan-popup-play').onclick = function() {
-      const audio = document.getElementById('adzan-audio');
-      audio.currentTime = 0;
-      audio.play().catch(err => {
-        // Error is silently ignored
-      });
+      // Audio already auto-playing from extension
+      // Just close the popup
+      hideAdzanPopup();
     };
 
     let adzanSoonCountdownInterval = null;

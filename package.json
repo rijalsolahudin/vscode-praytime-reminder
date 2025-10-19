@@ -18,6 +18,14 @@
       {
         "command": "praytime-reminder.openSettings",
         "title": "PrayTime Reminder : Buka PrayTime Reminder"
+      },
+      {
+        "command": "praytime-reminder.testAdzan",
+        "title": "PrayTime Reminder : Test Adzan PrayTime Reminder"
+      },
+      {
+        "command": "praytime-reminder.stopAdzan",
+        "title": "PrayTime Reminder : Stop Adzan Audio"
       }
     ],
     "icons": {
@@ -31,7 +39,7 @@
     }
   },
   "scripts": {
-    "copy-assets": "mkdir -p out/assets && cp src/assets/*.json out/assets/ && cp src/assets/adzan-mekkah.mp3 out/assets/ || true",
+    "copy-assets": "mkdir -p out/assets && cp src/assets/*.json out/assets/ && cp src/assets/adzan-mekkah.mp3 out/assets/ && cp src/assets/adzan-mekkah.wav out/assets/ || true",
     "copy-html": "cp src/webview/webview.html out/webview/webview.html",
     "compile": "tsc -p ./ && pnpm run copy-assets && pnpm run copy-html",
     "watch": "tsc -watch -p ./",
@@ -56,5 +64,10 @@
     "type": "git",
     "url": "https://github.com/rijalsolahudin/vscode-praytime-reminder"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "@types/play-sound": "^1.1.2",
+    "node-wav-player": "^1.0.0",
+    "play-sound": "^1.1.6"
+  }
 }

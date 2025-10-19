@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import { getWebviewContent } from './webview/getWebviewContent';
 import { setLastWebviewPanel, getLastWebviewPanel } from './panelManager';
+import { stopAdzanAudio, triggerAdzanNotification } from './statusBar';
 
 export async function triggerAdzanReminder() {
 	const panel = getLastWebviewPanel();
@@ -32,33 +33,48 @@ export function registerCommands(context: vscode.ExtensionContext) {
 		setLastWebviewPanel(panel);
 		(panel as any)._adzanReady = false;
 		panel.onDidDispose(() => {
+			// Stop audio when webview panel is closed
+			stopAdzanAudio();
+			
 			if (getLastWebviewPanel() === panel) {
 				setLastWebviewPanel(undefined);
 			}
 		});
 		panel.webview.onDidReceiveMessage(msg => {
+			console.log('[commands] Received message from webview:', msg);
+			
 			if (msg.ready) {
 				(panel as any)._adzanReady = true;
 				panel.webview.postMessage({ playAdzan: true });
 			}
+			if (msg.stopAdzan) {
+				// Stop adzan audio when user closes popup
+				console.log('[commands] stopAdzan message received, calling stopAdzanAudio()');
+				stopAdzanAudio();
+			}
 		});
 	});
 
+	const stopAdzan = vscode.commands.registerCommand('praytime-reminder.stopAdzan', () => {
+		stopAdzanAudio();
+		vscode.window.showInformationMessage('Adzan audio dihentikan.');
+	});
+
 	const testAdzan = vscode.commands.registerCommand('praytime-reminder.testAdzan', async () => {
-		await triggerAdzanReminder();
-		setTimeout(() => {
-			const panel = getLastWebviewPanel();
-			if (panel) {
-				panel.webview.postMessage({
-					showAdzanPopup: true,
-					prayerName: 'Subuh', // Dummy/test data
-					time: '04:30',
-					location: 'Jakarta, Indonesia'
-				});
-			}
-		}, 700);
+		// Use the SAME function as real adzan (consistency!)
+		console.log('[testAdzan] Triggering test adzan notification');
+		
+		await triggerAdzanNotification(
+			'Subuh',                    // Test prayer name
+			'04:30',                    // Test time
+			'Jakarta, Indonesia',       // Test location
+			'WIB'                       // Test timezone
+		);
+		
+		console.log('[testAdzan] Test adzan triggered successfully');
 	});
 
 	context.subscriptions.push(openSettings);
 	context.subscriptions.push(testAdzan);
+	context.subscriptions.push(stopAdzan);
 } 

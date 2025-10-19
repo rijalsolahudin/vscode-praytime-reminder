@@ -1,8 +1,16 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
 import { getUserPrayData } from './api/getUserPrayData';
 import { getNextPrayerVars, PrayKey, PrayTimes } from './utils/prayerTimeUtils';
 import { triggerAdzanReminder } from './commands';
 import { getLastWebviewPanel } from './panelManager';
+
+// Import play-sound (more robust, auto-detects available players)
+const playSound = require('play-sound');
+const player = playSound({
+  // Fallback players in order of preference
+  players: ['ffplay', 'aplay', 'mplayer', 'mpg123', 'mpg321', 'play', 'omxplayer', 'cvlc']
+});
 
 let statusBarItem: vscode.StatusBarItem | undefined;
 let updateInterval: NodeJS.Timeout | undefined;
@@ -18,6 +26,7 @@ let cachedDate: string | null = null;
 let retryCount: number = 0;
 let isRetrying: boolean = false;
 let retryTimeout: NodeJS.Timeout | undefined;
+let currentAudioProcess: any = null;
 
 // --- Status Bar Initialization ---
 function createStatusBar() {
@@ -169,36 +178,161 @@ async function showSoonPopup(prayer: string, adzanTime: Date, city: string, coun
   }
 }
 
+/**
+ * Play adzan audio from extension (not webview)
+ * Uses play-sound for reliable cross-platform autoplay
+ */
+async function playAdzanAudio() {
+  try {
+    // Stop any currently playing audio first
+    stopAdzanAudio();
+    
+    const adzanPath = path.join(__dirname, 'assets', 'adzan-mekkah.wav');
+    console.log('[playAdzanAudio] Playing adzan from:', adzanPath);
+    
+    // Play audio using play-sound with ffplay options to hide window
+    currentAudioProcess = player.play(adzanPath, { 
+      // Options for ffplay to run in background without window
+      ffplay: ['-nodisp', '-autoexit', '-loglevel', 'quiet']
+    }, (err: any) => {
+      if (err) {
+        console.error('[playAdzanAudio] Error during playback:', err);
+        
+        // Try fallback to webview if extension audio fails
+        const panel = getLastWebviewPanel();
+        if (panel) {
+          panel.webview.postMessage({ playAdzan: true });
+        }
+      } else {
+        console.log('[playAdzanAudio] Adzan audio finished playing');
+      }
+      currentAudioProcess = null;
+    });
+    
+    console.log('[playAdzanAudio] Adzan audio started successfully');
+  } catch (error) {
+    console.error('[playAdzanAudio] Error playing adzan:', error);
+    
+    // Fallback to webview audio
+    const panel = getLastWebviewPanel();
+    if (panel) {
+      panel.webview.postMessage({ playAdzan: true });
+      console.log('[playAdzanAudio] Falling back to webview audio');
+    }
+  }
+}
+
+/**
+ * Stop adzan audio if currently playing
+ * Cross-platform support: Windows, Linux, macOS
+ */
+export function stopAdzanAudio() {
+  console.log('[stopAdzanAudio] Called - stopping audio...');
+  
+  try {
+    const { execSync } = require('child_process');
+    
+    // Kill the tracked process first
+    if (currentAudioProcess) {
+      try {
+        if (currentAudioProcess.kill) {
+          currentAudioProcess.kill('SIGKILL');
+          console.log('[stopAdzanAudio] ✅ Killed tracked process (PID:', currentAudioProcess.pid, ')');
+        }
+      } catch (e) {
+        console.log('[stopAdzanAudio] Tracked process already killed');
+      }
+      currentAudioProcess = null;
+    }
+    
+    // Nuclear option: Kill all audio player processes by name
+    const playersToKill = ['ffplay', 'aplay', 'mplayer', 'mpg123', 'mpg321', 'cvlc'];
+    
+    if (process.platform === 'linux' || process.platform === 'darwin') {
+      // Linux/macOS: Use pkill
+      playersToKill.forEach(playerName => {
+        try {
+          execSync(`pkill -9 ${playerName}`, { stdio: 'ignore' });
+          console.log(`[stopAdzanAudio] ✅ Killed ${playerName} processes (Linux/Mac)`);
+        } catch (e) {
+          // No process found, continue
+        }
+      });
+    } else if (process.platform === 'win32') {
+      // Windows: Use taskkill
+      playersToKill.forEach(playerName => {
+        try {
+          execSync(`taskkill /F /IM ${playerName}.exe`, { stdio: 'ignore' });
+          console.log(`[stopAdzanAudio] ✅ Killed ${playerName} processes (Windows)`);
+        } catch (e) {
+          // No process found, continue
+        }
+      });
+    }
+    
+    console.log('[stopAdzanAudio] ✅ Audio stop completed');
+  } catch (error) {
+    console.error('[stopAdzanAudio] ❌ Error stopping adzan:', error);
+  }
+}
+
 function shouldShowAdzanPopup(adzanTime: Date, now: Date, prayer: string): boolean {
   const adzanKey = `${prayer}-${now.getDate()}`;
   return now.getHours() === adzanTime.getHours() && now.getMinutes() === adzanTime.getMinutes() && lastTriggeredPrayer !== adzanKey;
 }
 
-async function showAdzanPopup(prayer: string, adzanTime: Date, time: string, city: string, country: string, timeZone: string, now: Date) {
-  const adzanKey = `${prayer}-${now.getDate()}`;
-  const sendAdzanPopup = () => {
-    const panel = getLastWebviewPanel();
-    if (panel) {
-      panel.reveal(vscode.ViewColumn.One); // Pindahkan fokus ke webview
-      panel.webview.postMessage({
+/**
+ * Trigger adzan notification with audio playback and popup
+ * This is the CORE function used by both real adzan and test adzan
+ * @param prayerName Display name (e.g., "Subuh", "Dzuhur")
+ * @param time Time string (e.g., "04:30")
+ * @param location Location string (e.g., "Jakarta, Indonesia")
+ * @param timeZone Timezone string (e.g., "WIB")
+ */
+export async function triggerAdzanNotification(prayerName: string, time: string, location: string, timeZone: string) {
+  console.log('[triggerAdzanNotification] Triggering adzan for:', prayerName);
+  
+  // 1. Play adzan audio automatically from extension
+  await playAdzanAudio();
+  
+  // 2. Open/reveal webview panel
+  const panel = getLastWebviewPanel();
+  if (!panel) {
+    await triggerAdzanReminder();
+  } else {
+    panel.reveal(vscode.ViewColumn.One);
+  }
+  
+  // 3. Send popup message to webview
+  setTimeout(() => {
+    const currentPanel = getLastWebviewPanel();
+    if (currentPanel) {
+      currentPanel.webview.postMessage({
         showAdzanPopup: true,
-        prayerName: getPrayerDisplayName(prayer),
+        prayerName,
         time,
-        location: `${city}, ${country}`,
+        location,
         timeZone
       });
-      lastTriggeredPrayer = adzanKey;
-      adzanPopupPendingPrayer = null;
+      console.log('[triggerAdzanNotification] Popup message sent to webview');
     }
-  };
-  if (!getLastWebviewPanel()) {
-    if (!adzanPopupPendingPrayer || adzanPopupPendingPrayer.prayer !== prayer || adzanPopupPendingPrayer.now.getDate() !== now.getDate()) {
-      adzanPopupPendingPrayer = { prayer, adzanTime, time, city, country, timeZone, now };
-      await triggerAdzanReminder();
-    }
-  } else {
-    sendAdzanPopup();
-  }
+  }, 700); // Wait for webview to be ready
+}
+
+async function showAdzanPopup(prayer: string, adzanTime: Date, time: string, city: string, country: string, timeZone: string, now: Date) {
+  const adzanKey = `${prayer}-${now.getDate()}`;
+  
+  // Use the core adzan notification function
+  await triggerAdzanNotification(
+    getPrayerDisplayName(prayer),
+    time,
+    `${city}, ${country}`,
+    timeZone
+  );
+  
+  // Mark as triggered
+  lastTriggeredPrayer = adzanKey;
+  adzanPopupPendingPrayer = null;
 }
 
 // --- Main function ---
@@ -371,6 +505,10 @@ export function startStatusBar() {
 
 export function disposeStatusBar() {
   clearStatusBarUpdate();
+  
+  // Stop any playing audio
+  stopAdzanAudio();
+  
   if (statusBarItem) {
     statusBarItem.dispose();
     statusBarItem = undefined;
