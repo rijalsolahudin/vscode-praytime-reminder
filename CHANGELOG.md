@@ -6,6 +6,43 @@ All notable changes to the "praytime-reminder" extension will be documented in t
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
 
+## [v1.0.5] - 2025-10-19
+
+### Improved
+- Adzan audio now plays automatically when prayer time arrives without requiring user to click button in webview.
+- Implemented retry mechanism for fetching prayer times with exponential backoff to handle network failures gracefully.
+- Added cross-platform audio playback support for adzan notifications.
+- Added test commands for development/debugging (only functional in Extension Development Mode):
+  - `Ctrl+Shift+F9` / `Cmd+Shift+F9` - Test adzan notification immediately.
+  - `Ctrl+Shift+F10` / `Cmd+Shift+F10` - Test 5-minute early notification.
+  - Commands are blocked in production with a warning message for security.
+- Implemented command to stop adzan audio: "PrayTime Reminder : Stop Adzan Audio".
+- Added custom PrayTime logo font file (praytime.woff) for better branding in the status bar.
+- Enhanced status bar display to show retry attempts when fetching prayer times fails.
+- Improved webview layout for better mobile/tablet experience:
+  - Clock and location info now displayed above prayer times on vertical screens for better balance.
+  - Timezone (WIB/WITA/WIT) displayed next to clock on all screen sizes.
+  - Date (Masehi & Hijriah) and location arranged horizontally on mobile/tablet for more compact layout.
+  - All content properly centered on mobile/tablet, left-aligned on desktop.
+- Refactored notification logic to support both immediate adzan and 5-minute early notifications.
+
+### Fixed
+- Fixed audio playback issues across different operating systems (Windows, macOS, Linux).
+- Improved error handling when fetching prayer times from API.
+
+### Release Note
+
+Version 1.0.5 brings major improvements to reliability, audio playback, and responsive design:
+
+- **Auto-Play Adzan**: Adzan audio now plays automatically when prayer time arrives without requiring user interaction.
+- **Cross-Platform Audio**: Fixed audio playback issues; adzan now works reliably on Windows, macOS, and Linux.
+- **Smart Retry Mechanism**: Automatic retry with exponential backoff when prayer time API is unreachable, with visual feedback in the status bar.
+- **Responsive Layout**: Webview now adapts beautifully to all screen sizes (mobile, tablet, desktop) with optimized layouts for each.
+- **Timezone Display**: Timezone (WIB/WITA/WIT) is now displayed next to the clock for better clarity.
+- **Improved Mobile Layout**: Clock and location info moved above prayer times on vertical screens for better balance; date and location arranged horizontally for more compact display.
+- **Developer Tools**: Test commands accessible via keyboard shortcuts (`Ctrl+Shift+F9` and `Ctrl+Shift+F10`) for easier development; automatically blocked in production mode for security.
+
+
 ## [v1.0.4] - 2025-07-04
 
 ### Fixed

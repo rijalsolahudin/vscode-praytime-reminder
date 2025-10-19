@@ -61,6 +61,13 @@ export function registerCommands(context: vscode.ExtensionContext) {
 	});
 
 	const testAdzan = vscode.commands.registerCommand('praytime-reminder.testAdzan', async () => {
+		// Only allow in development mode
+		if (context.extensionMode === vscode.ExtensionMode.Production) {
+			vscode.window.showWarningMessage('⚠️ Test commands are only available in Extension Development Mode.');
+			console.log('[testAdzan] Blocked: Extension is running in production mode');
+			return;
+		}
+		
 		// Use the SAME function as real adzan (consistency!)
 		console.log('[testAdzan] Triggering test adzan notification');
 		
@@ -75,6 +82,13 @@ export function registerCommands(context: vscode.ExtensionContext) {
 	});
 
 	const testSoonNotification = vscode.commands.registerCommand('praytime-reminder.testSoonNotification', async () => {
+		// Only allow in development mode
+		if (context.extensionMode === vscode.ExtensionMode.Production) {
+			vscode.window.showWarningMessage('⚠️ Test commands are only available in Extension Development Mode.');
+			console.log('[testSoonNotification] Blocked: Extension is running in production mode');
+			return;
+		}
+		
 		// Use the SAME function as real soon notification (consistency!)
 		console.log('[testSoonNotification] Triggering test soon notification');
 		
