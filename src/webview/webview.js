@@ -155,7 +155,15 @@ document.getElementById('adzan-soon-popup-close').onclick = function() {
 let vscodeApi;
 let currentSettings = {
   enableAdzanSound: true,
-  enableSoonNotification: true
+  enableSoonNotification: true,
+  soonNotificationMinutes: 5
+};
+
+// Temporary settings (before save)
+let tempSettings = {
+  enableAdzanSound: true,
+  enableSoonNotification: true,
+  soonNotificationMinutes: 5
 };
 
 // Initialize VSCode API
@@ -165,6 +173,9 @@ if (window.acquireVsCodeApi) {
 
 // Open settings popup
 document.getElementById('settings-btn').onclick = function() {
+  // Copy current settings to temp
+  tempSettings = { ...currentSettings };
+  
   document.getElementById('settings-popup').style.display = 'flex';
   // Request current settings from extension
   if (vscodeApi) {
@@ -172,12 +183,55 @@ document.getElementById('settings-btn').onclick = function() {
   }
 };
 
-// Close settings popup
+// Close settings popup without saving
 function closeSettingsPopup() {
+  // Restore original settings
+  tempSettings = { ...currentSettings };
+  
+  // Restore UI to original state
+  setToggleState(document.getElementById('toggle-adzan-sound'), currentSettings.enableAdzanSound);
+  setToggleState(document.getElementById('toggle-soon-notification'), currentSettings.enableSoonNotification);
+  
+  const slider = document.getElementById('minutes-slider');
+  const display = document.getElementById('minutes-display');
+  slider.value = currentSettings.soonNotificationMinutes;
+  display.textContent = `${currentSettings.soonNotificationMinutes} menit`;
+  const percentage = ((currentSettings.soonNotificationMinutes - 1) / 29) * 100;
+  slider.style.background = `linear-gradient(to right, #10b981 0%, #10b981 ${percentage}%, #9ca3af ${percentage}%, #9ca3af 100%)`;
+  
+  const sliderContainer = document.getElementById('minutes-slider-container');
+  if (currentSettings.enableSoonNotification) {
+    sliderContainer.style.display = 'block';
+  } else {
+    sliderContainer.style.display = 'none';
+  }
+  
   document.getElementById('settings-popup').style.display = 'none';
 }
+
 document.getElementById('settings-popup-close').onclick = closeSettingsPopup;
-document.getElementById('settings-done-btn').onclick = closeSettingsPopup;
+document.getElementById('settings-cancel-btn').onclick = closeSettingsPopup;
+
+// Save settings
+document.getElementById('settings-save-btn').onclick = function() {
+  console.log('[settings-save-btn] Saving settings...', tempSettings);
+  
+  // Update current settings from temp
+  currentSettings = { ...tempSettings };
+  
+  // Send all settings to extension
+  if (vscodeApi) {
+    console.log('[settings-save-btn] Sending saveSettings message to extension');
+    vscodeApi.postMessage({
+      saveSettings: true,
+      settings: currentSettings
+    });
+  } else {
+    console.error('[settings-save-btn] vscodeApi not available!');
+  }
+  
+  document.getElementById('settings-popup').style.display = 'none';
+};
 
 // Toggle switch helper
 function setToggleState(toggleBtn, enabled) {
@@ -199,28 +253,35 @@ function setToggleState(toggleBtn, enabled) {
 
 // Adzan Sound Toggle
 document.getElementById('toggle-adzan-sound').onclick = function() {
-  currentSettings.enableAdzanSound = !currentSettings.enableAdzanSound;
-  setToggleState(this, currentSettings.enableAdzanSound);
-  if (vscodeApi) {
-    vscodeApi.postMessage({
-      updateSetting: true,
-      key: 'enableAdzanSound',
-      value: currentSettings.enableAdzanSound
-    });
-  }
+  tempSettings.enableAdzanSound = !tempSettings.enableAdzanSound;
+  setToggleState(this, tempSettings.enableAdzanSound);
 };
 
 // Soon Notification Toggle
 document.getElementById('toggle-soon-notification').onclick = function() {
-  currentSettings.enableSoonNotification = !currentSettings.enableSoonNotification;
-  setToggleState(this, currentSettings.enableSoonNotification);
-  if (vscodeApi) {
-    vscodeApi.postMessage({
-      updateSetting: true,
-      key: 'enableSoonNotification',
-      value: currentSettings.enableSoonNotification
-    });
+  tempSettings.enableSoonNotification = !tempSettings.enableSoonNotification;
+  setToggleState(this, tempSettings.enableSoonNotification);
+  
+  // Show/hide slider based on toggle state
+  const sliderContainer = document.getElementById('minutes-slider-container');
+  if (tempSettings.enableSoonNotification) {
+    sliderContainer.style.display = 'block';
+  } else {
+    sliderContainer.style.display = 'none';
   }
+};
+
+// Minutes Slider
+document.getElementById('minutes-slider').oninput = function() {
+  const value = parseInt(this.value);
+  tempSettings.soonNotificationMinutes = value;
+  
+  // Update display
+  document.getElementById('minutes-display').textContent = `${value} menit`;
+  
+  // Update slider background
+  const percentage = ((value - 1) / 29) * 100;
+  this.style.background = `linear-gradient(to right, #10b981 0%, #10b981 ${percentage}%, #9ca3af ${percentage}%, #9ca3af 100%)`;
 };
 
 // Listen for messages from extension
@@ -241,12 +302,34 @@ window.addEventListener('message', event => {
   if (event.data && event.data.showAdzanSoonPopup) {
     showAdzanSoonPopup(event.data);
   }
-  if (event.data && event.data.currentSettings) {
-    // Update settings UI
-    currentSettings = event.data.currentSettings;
-    setToggleState(document.getElementById('toggle-adzan-sound'), currentSettings.enableAdzanSound);
-    setToggleState(document.getElementById('toggle-soon-notification'), currentSettings.enableSoonNotification);
-  }
+      if (event.data && event.data.currentSettings) {
+        // Update both current and temp settings
+        currentSettings = event.data.currentSettings;
+        tempSettings = { ...currentSettings };
+        
+        // Update UI
+        setToggleState(document.getElementById('toggle-adzan-sound'), currentSettings.enableAdzanSound);
+        setToggleState(document.getElementById('toggle-soon-notification'), currentSettings.enableSoonNotification);
+        
+        // Update slider
+        const slider = document.getElementById('minutes-slider');
+        const display = document.getElementById('minutes-display');
+        const sliderContainer = document.getElementById('minutes-slider-container');
+        
+        slider.value = currentSettings.soonNotificationMinutes;
+        display.textContent = `${currentSettings.soonNotificationMinutes} menit`;
+        
+        // Update slider background
+        const percentage = ((currentSettings.soonNotificationMinutes - 1) / 29) * 100;
+        slider.style.background = `linear-gradient(to right, #10b981 0%, #10b981 ${percentage}%, #9ca3af ${percentage}%, #9ca3af 100%)`;
+        
+        // Show/hide slider based on toggle state
+        if (currentSettings.enableSoonNotification) {
+          sliderContainer.style.display = 'block';
+        } else {
+          sliderContainer.style.display = 'none';
+        }
+      }
 });
 
 // Handshake: notify extension when webview is ready

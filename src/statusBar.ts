@@ -141,11 +141,19 @@ function getTimeZoneLabel(): string {
 }
 
 function shouldShowSoonPopup(adzanTime: Date, now: Date, prayer: string): boolean {
-  const soonKey = `${prayer}-soon-${now.getDate()}`;
   const diff = adzanTime.getTime() - now.getTime();
+  
+  // Get configured minutes from settings
+  const config = vscode.workspace.getConfiguration('praytime-reminder');
+  const soonNotificationMinutes = config.get('soonNotificationMinutes', 5);
+  const diffMinutes = soonNotificationMinutes * 60 * 1000;
+  
+  // Include minutes in key so changing settings allows re-trigger
+  const soonKey = `${prayer}-soon-${soonNotificationMinutes}min-${now.getDate()}`;
+  
   return (
     diff > 0 &&
-    diff <= 5 * 60 * 1000 &&
+    diff <= diffMinutes &&
     lastSoonTriggeredPrayer !== soonKey
   );
 }
@@ -205,23 +213,19 @@ function playNotificationSound() {
 export async function triggerSoonNotification(prayerName: string, minutesLeft: number, location: string, secondsLeft?: number) {
   console.log('[triggerSoonNotification] Triggering soon notification for:', prayerName, `(${minutesLeft} min)`);
   
-  // Check if soon notification is enabled (for sound)
+  // Check if soon notification is enabled
   const config = vscode.workspace.getConfiguration('praytime-reminder');
   const enableSoonNotification = config.get('enableSoonNotification', true);
   
-  // 1. Play notification sound (only if enabled)
-  if (enableSoonNotification) {
-    playNotificationSound();
-  } else {
-    console.log('[triggerSoonNotification] Soon notification sound is disabled, skipping beep...');
+  if (!enableSoonNotification) {
+    console.log('[triggerSoonNotification] Soon notification is disabled in settings, skipping all notifications...');
+    return;
   }
   
-  // 2. Show OS system notification (no button, just info)
-  vscode.window.showInformationMessage(
-    `🕌 ${prayerName} dalam ${minutesLeft} menit`
-  );
-  
-  // 3. Open/reveal webview panel
+  // 1. Play notification sound
+  playNotificationSound();
+
+  // 2. Open/reveal webview panel
   const panel = getLastWebviewPanel();
   if (!panel) {
     await triggerAdzanReminder();
@@ -229,7 +233,7 @@ export async function triggerSoonNotification(prayerName: string, minutesLeft: n
     panel.reveal(vscode.ViewColumn.One);
   }
   
-  // 4. Send popup message to webview
+  // 3. Send popup message to webview
   setTimeout(() => {
     const currentPanel = getLastWebviewPanel();
     if (currentPanel) {
@@ -253,7 +257,9 @@ async function showSoonPopup(prayer: string, adzanTime: Date, city: string, coun
     return;
   }
   
-  const soonKey = `${prayer}-soon-${now.getDate()}`;
+  // Get configured minutes and include in key for re-trigger support
+  const soonNotificationMinutes = config.get('soonNotificationMinutes', 5);
+  const soonKey = `${prayer}-soon-${soonNotificationMinutes}min-${now.getDate()}`;
   
   // Mark as triggered FIRST to prevent race condition in interval loop
   lastSoonTriggeredPrayer = soonKey;

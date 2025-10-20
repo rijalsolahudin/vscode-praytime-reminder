@@ -48,7 +48,7 @@ export function registerCommands(context: vscode.ExtensionContext) {
 				setLastWebviewPanel(undefined);
 			}
 		});
-		panel.webview.onDidReceiveMessage(msg => {
+		panel.webview.onDidReceiveMessage(async (msg) => {
 			console.log('[commands] Received message from webview:', msg);
 			
 			if (msg.ready) {
@@ -65,7 +65,8 @@ export function registerCommands(context: vscode.ExtensionContext) {
 				const config = vscode.workspace.getConfiguration('praytime-reminder');
 				const settings = {
 					enableAdzanSound: config.get('enableAdzanSound', true),
-					enableSoonNotification: config.get('enableSoonNotification', true)
+					enableSoonNotification: config.get('enableSoonNotification', true),
+					soonNotificationMinutes: config.get('soonNotificationMinutes', 5)
 				};
 				panel.webview.postMessage({ currentSettings: settings });
 			}
@@ -74,6 +75,18 @@ export function registerCommands(context: vscode.ExtensionContext) {
 				const config = vscode.workspace.getConfiguration('praytime-reminder');
 				config.update(msg.key, msg.value, vscode.ConfigurationTarget.Global);
 				console.log('[commands] Setting updated:', msg.key, '=', msg.value);
+			}
+			if (msg.saveSettings) {
+				// Save all settings at once
+				const config = vscode.workspace.getConfiguration('praytime-reminder');
+				const settings = msg.settings;
+				
+				await config.update('enableAdzanSound', settings.enableAdzanSound, vscode.ConfigurationTarget.Global);
+				await config.update('enableSoonNotification', settings.enableSoonNotification, vscode.ConfigurationTarget.Global);
+				await config.update('soonNotificationMinutes', settings.soonNotificationMinutes, vscode.ConfigurationTarget.Global);
+				
+				console.log('[commands] All settings saved:', settings);
+				vscode.window.showInformationMessage('✅ Pengaturan berhasil disimpan');
 			}
 		});
 	});
@@ -114,10 +127,21 @@ export function registerCommands(context: vscode.ExtensionContext) {
 		
 		// Use the SAME function as real soon notification (consistency!)
 		console.log('[testSoonNotification] Triggering test soon notification');
-		
+
+		// Read settings so tests follow real configuration
+		const config = vscode.workspace.getConfiguration('praytime-reminder');
+		const enableSoonNotification = config.get('enableSoonNotification', true);
+		const soonNotificationMinutes = config.get('soonNotificationMinutes', 5);
+
+		if (!enableSoonNotification) {
+			vscode.window.showInformationMessage('Notifikasi sebelum adzan sedang dimatikan di pengaturan. Aktifkan untuk menjalankan test.');
+			console.log('[testSoonNotification] Aborted: enableSoonNotification is false');
+			return;
+		}
+
 		await triggerSoonNotification(
 			'Dzuhur',                   // Test prayer name
-			5,                          // Test minutes left
+			soonNotificationMinutes,    // Respect configured minutes
 			'Jakarta, Indonesia'        // Test location
 		);
 		
