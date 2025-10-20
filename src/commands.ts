@@ -25,11 +25,19 @@ export function registerCommands(context: vscode.ExtensionContext) {
 			{ enableScripts: true }
 		);
 
-		// Resolve adzan audio file as webview URI
+		// Resolve webview URIs
 		const adzanAudioPath = vscode.Uri.file(path.join(__dirname, 'assets/adzan-mekkah.mp3'));
 		const adzanAudioUrl = panel.webview.asWebviewUri(adzanAudioPath).toString();
+		
+		const cssPath = vscode.Uri.file(path.join(__dirname, 'webview/webview.css'));
+		const cssUrl = panel.webview.asWebviewUri(cssPath).toString();
+		
+		const jsPath = vscode.Uri.file(path.join(__dirname, 'webview/webview.js'));
+		const jsUrl = panel.webview.asWebviewUri(jsPath).toString();
+		
+		const cspSource = panel.webview.cspSource;
 
-		panel.webview.html = await getWebviewContent(adzanAudioUrl);
+		panel.webview.html = await getWebviewContent(adzanAudioUrl, cssUrl, jsUrl, cspSource);
 		setLastWebviewPanel(panel);
 		(panel as any)._adzanReady = false;
 		panel.onDidDispose(() => {
@@ -51,6 +59,21 @@ export function registerCommands(context: vscode.ExtensionContext) {
 				// Stop adzan audio when user closes popup
 				console.log('[commands] stopAdzan message received, calling stopAdzanAudio()');
 				stopAdzanAudio();
+			}
+			if (msg.getSettings) {
+				// Send current settings to webview
+				const config = vscode.workspace.getConfiguration('praytime-reminder');
+				const settings = {
+					enableAdzanSound: config.get('enableAdzanSound', true),
+					enableSoonNotification: config.get('enableSoonNotification', true)
+				};
+				panel.webview.postMessage({ currentSettings: settings });
+			}
+			if (msg.updateSetting) {
+				// Update setting in VSCode config
+				const config = vscode.workspace.getConfiguration('praytime-reminder');
+				config.update(msg.key, msg.value, vscode.ConfigurationTarget.Global);
+				console.log('[commands] Setting updated:', msg.key, '=', msg.value);
 			}
 		});
 	});

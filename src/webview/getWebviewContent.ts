@@ -111,9 +111,18 @@ function getTimezone(tz: string): string {
 /**
  * Main function to generate the webview HTML content with all dynamic data injected.
  * This is the entry point called from the extension backend.
+ * @param adzanAudioUrl Webview URI for adzan audio
+ * @param cssUrl Webview URI for CSS file
+ * @param jsUrl Webview URI for JS file
+ * @param cspSource CSP source for webview
  * @returns The final HTML string for the webview
  */
-export async function getWebviewContent(adzanAudioUrl: string): Promise<string> {
+export async function getWebviewContent(
+  adzanAudioUrl: string,
+  cssUrl: string,
+  jsUrl: string,
+  cspSource: string
+): Promise<string> {
   const bg = getRandomBackground();
   const quote = getRandomQuote();
   const masehiDate = getMasehiDateString();
@@ -125,7 +134,7 @@ export async function getWebviewContent(adzanAudioUrl: string): Promise<string> 
   const now = new Date();
   const { nextPrayer, prayerVars } = getNextPrayerVars(prayTimes, now);
 
-  return renderWebviewHtml({
+  let html = renderWebviewHtml({
     bg,
     quote,
     masehiDate,
@@ -138,4 +147,12 @@ export async function getWebviewContent(adzanAudioUrl: string): Promise<string> 
     errorMsg,
     adzanAudioUrl
   });
+
+  // Replace CSS, JS URLs and CSP source
+  html = html
+    .replace(/{{CSS_URL}}/g, cssUrl)
+    .replace(/{{JS_URL}}/g, jsUrl)
+    .replace(/{{CSP_SOURCE}}/g, cspSource);
+
+  return html;
 } 

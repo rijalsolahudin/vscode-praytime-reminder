@@ -1,0 +1,319 @@
+html, body { 
+  height: 100%; 
+  width: 100%; 
+  margin: 0; 
+  padding: 0; 
+  overflow-x: hidden;
+}
+
+body {
+  font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  min-height: 100vh;
+  min-width: 100vw;
+}
+
+.overlay { 
+  background: rgba(24,24,27,0.7); 
+  position: fixed; 
+  inset: 0; 
+  z-index: 0; 
+}
+
+.prayer-hover:hover {
+  background: rgba(255,255,255,0.4) !important;
+  transition: background 0.2s;
+}
+
+.glass {
+  border-radius: 1.5rem;
+}
+
+.prayer-icon {
+  width: 1.25em;
+  margin-right: 0.5em;
+  opacity: 0.85;
+}
+
+.clock-animate {
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { text-shadow: 0 0 0px #fff; }
+  50% { text-shadow: 0 0 12px #60a5fa, 0 0 24px #fff; }
+  100% { text-shadow: 0 0 0px #fff; }
+}
+
+/* Mobile-first responsive design */
+@media (max-width: 1279px) {
+  body {
+    font-size: 14px;
+  }
+  
+  /* Clock section for mobile/tablet */
+  .clock-section {
+    align-items: center !important;
+  }
+  
+  .clock-section > div {
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+  }
+  
+  /* Clock with timezone aligned to center as a group for mobile */
+  .clock-section .clock-with-timezone {
+    margin-bottom: 0.75rem !important;
+    align-self: center !important;
+  }
+  
+  /* Date and location in horizontal layout for mobile */
+  .clock-section .date-location-wrapper {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 0.75rem 1.5rem !important;
+    justify-content: center !important;
+    align-items: center !important;
+  }
+  
+  .clock-section .date-location-wrapper > div {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.375rem !important;
+  }
+  
+  /* Smaller clock for mobile/tablet */
+  #clock {
+    font-size: 2.5rem !important;
+    line-height: 1.1 !important;
+  }
+  
+  /* Full width prayer times container for mobile/tablet */
+  .prayer-times-container {
+    overflow: visible !important;
+    max-width: 100% !important;
+  }
+  
+  /* Center "Jadwal sholat hari ini" text for mobile */
+  .prayer-times-container > .font-bold {
+    text-align: center !important;
+  }
+  
+  /* Horizontal grid prayer times for mobile/tablet */
+  .prayer-times-layout {
+    display: grid !important;
+    grid-template-columns: repeat(5, 1fr) !important;
+    gap: 0.75rem !important;
+    width: 100% !important;
+  }
+  
+  .prayer-time-item {
+    flex: 1 !important;
+    padding: 1rem 0.5rem !important;
+    margin-bottom: 0 !important;
+    text-align: center !important;
+    min-width: 0 !important;
+  }
+  
+  .prayer-time-item .flex {
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+  }
+  
+  .prayer-time-item .flex span:first-child {
+    font-size: 0.875rem !important;
+    justify-content: center !important;
+    line-height: 1.2 !important;
+    font-weight: 600 !important;
+  }
+  
+  .prayer-time-item .flex span:last-child {
+    font-size: 1.125rem !important;
+    font-weight: 700 !important;
+    justify-content: center !important;
+    line-height: 1.1 !important;
+  }
+  
+  /* Make icons bigger for mobile grid */
+  .prayer-time-item svg {
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+  }
+  
+  /* Hide countdown on mobile horizontal */
+  .prayer-time-item .text-xs {
+    display: none !important;
+  }
+  
+  /* Smaller icons for mobile */
+  .prayer-icon {
+    width: 1rem !important;
+    height: 1rem !important;
+  }
+  
+  /* Compact popups */
+  #adzan-popup, #adzan-soon-popup {
+    padding: 1rem !important;
+    margin: 1rem !important;
+  }
+  
+  /* Stack layout for very small screens */
+  @media (max-height: 600px) {
+    .quote-section {
+      margin-top: 1rem !important;
+      margin-bottom: 0.5rem !important;
+    }
+    
+    .quote-section .text-xl {
+      font-size: 1rem !important;
+    }
+    
+    .quote-section .text-base {
+      font-size: 0.875rem !important;
+    }
+    
+    .quote-section .text-xs {
+      font-size: 0.75rem !important;
+    }
+    
+    #clock {
+      font-size: 2rem !important;
+    }
+    
+    .prayer-times-container {
+      padding: 0.75rem !important;
+    }
+    
+    .prayer-time-item {
+      padding: 0.375rem 0.5rem !important;
+    }
+  }
+  
+  /* Ultra-narrow screens (like phone in portrait) */
+  @media (max-width: 400px) {
+    .main-content {
+      gap: 1rem !important;
+      padding: 0.5rem !important;
+    }
+    
+    .clock-section {
+      padding: 1rem !important;
+    }
+    
+    .prayer-times-container {
+      padding: 0.75rem !important;
+    }
+    
+    .prayer-times-layout {
+      gap: 0.5rem !important;
+    }
+    
+    .prayer-time-item {
+      padding: 0.75rem 0.25rem !important;
+    }
+    
+    .prayer-time-item .flex span:first-child {
+      font-size: 0.75rem !important;
+    }
+    
+    .prayer-time-item .flex span:last-child {
+      font-size: 0.875rem !important;
+    }
+    
+    .prayer-time-item svg {
+      width: 1rem !important;
+      height: 1rem !important;
+    }
+  }
+}
+
+/* Desktop layout - vertical prayer times */
+@media (min-width: 1280px) {
+  /* Clock with timezone left aligned for desktop */
+  .clock-section .clock-with-timezone {
+    justify-content: flex-start !important;
+  }
+  
+  /* Date and location vertical for desktop */
+  .clock-section .date-location-wrapper {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.25rem !important;
+    align-items: flex-start !important;
+    margin-top: 0.75rem !important;
+  }
+  
+  .clock-section .date-location-wrapper > div {
+    margin-top: 0 !important;
+  }
+  
+  .prayer-times-layout {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1.5rem !important;
+  }
+  
+  .prayer-time-item {
+    flex: none !important;
+    padding: 0.75rem 1rem !important;
+    margin-bottom: 0 !important;
+    text-align: left !important;
+  }
+  
+  .prayer-time-item .flex {
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+  }
+  
+  .prayer-time-item .flex span:first-child {
+    font-size: 1rem !important;
+    justify-content: flex-start !important;
+  }
+  
+  .prayer-time-item .flex span:last-child {
+    font-size: 1.125rem !important;
+    font-weight: 700 !important;
+    justify-content: flex-end !important;
+  }
+  
+  .prayer-time-item svg {
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+  }
+  
+  .prayer-time-item .text-xs {
+    display: block !important;
+  }
+}
+
+/* Landscape mobile optimization */
+@media (max-width: 768px) and (orientation: landscape) {
+  .quote-section {
+    margin-top: 0.5rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+  
+  .quote-section .text-xl {
+    font-size: 1rem !important;
+  }
+  
+  .quote-section .text-base {
+    font-size: 0.875rem !important;
+  }
+  
+  .main-content {
+    gap: 1rem !important;
+    padding: 0.5rem !important;
+    min-height: auto !important;
+  }
+  
+  #clock {
+    font-size: 2rem !important;
+  }
+}
+

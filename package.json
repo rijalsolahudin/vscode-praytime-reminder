@@ -14,6 +14,21 @@
   ],
   "main": "./out/extension.js",
   "contributes": {
+    "configuration": {
+      "title": "PrayTime Reminder",
+      "properties": {
+        "praytime-reminder.enableAdzanSound": {
+          "type": "boolean",
+          "default": true,
+          "description": "Aktifkan suara adzan saat waktu sholat tiba"
+        },
+        "praytime-reminder.enableSoonNotification": {
+          "type": "boolean",
+          "default": true,
+          "description": "Aktifkan notifikasi 5 menit sebelum waktu adzan"
+        }
+      }
+    },
     "commands": [
       {
         "command": "praytime-reminder.openSettings",
@@ -48,8 +63,8 @@
   },
   "scripts": {
     "copy-assets": "mkdir -p out/assets && cp src/assets/*.json out/assets/ && cp src/assets/adzan-mekkah.wav out/assets/ || true",
-    "copy-html": "cp src/webview/webview.html out/webview/webview.html",
-    "compile": "tsc -p ./ && pnpm run copy-assets && pnpm run copy-html",
+    "copy-webview": "mkdir -p out/webview && cp src/webview/webview.html out/webview/ && cp src/webview/webview.css out/webview/ && cp src/webview/webview.js out/webview/",
+    "compile": "tsc -p ./ && pnpm run copy-assets && pnpm run copy-webview",
     "watch": "tsc -watch -p ./",
     "pretest": "pnpm run compile && pnpm run lint",
     "lint": "eslint src",

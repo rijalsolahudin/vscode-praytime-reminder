@@ -200,12 +200,21 @@ function playNotificationSound() {
  * @param prayerName Display name (e.g., "Subuh", "Dzuhur")
  * @param minutesLeft Minutes until adzan (e.g., 5)
  * @param location Location string (e.g., "Jakarta, Indonesia")
+ * @param secondsLeft Optional: Precise seconds until adzan (for accurate countdown)
  */
-export async function triggerSoonNotification(prayerName: string, minutesLeft: number, location: string) {
+export async function triggerSoonNotification(prayerName: string, minutesLeft: number, location: string, secondsLeft?: number) {
   console.log('[triggerSoonNotification] Triggering soon notification for:', prayerName, `(${minutesLeft} min)`);
   
-  // 1. Play notification sound
-  playNotificationSound();
+  // Check if soon notification is enabled (for sound)
+  const config = vscode.workspace.getConfiguration('praytime-reminder');
+  const enableSoonNotification = config.get('enableSoonNotification', true);
+  
+  // 1. Play notification sound (only if enabled)
+  if (enableSoonNotification) {
+    playNotificationSound();
+  } else {
+    console.log('[triggerSoonNotification] Soon notification sound is disabled, skipping beep...');
+  }
   
   // 2. Show OS system notification (no button, just info)
   vscode.window.showInformationMessage(
@@ -228,7 +237,7 @@ export async function triggerSoonNotification(prayerName: string, minutesLeft: n
         showAdzanSoonPopup: true,
         prayerName,
         location,
-        secondsLeft: minutesLeft * 60
+        secondsLeft: secondsLeft ?? minutesLeft * 60
       });
       console.log('[triggerSoonNotification] Soon popup message sent to webview');
     }
@@ -236,19 +245,30 @@ export async function triggerSoonNotification(prayerName: string, minutesLeft: n
 }
 
 async function showSoonPopup(prayer: string, adzanTime: Date, city: string, country: string, now: Date) {
-  const soonKey = `${prayer}-soon-${now.getDate()}`;
-  const prayerName = getPrayerDisplayName(prayer);
-  const minutesLeft = Math.floor((adzanTime.getTime() - now.getTime()) / 60000);
+  // Check if soon notification is enabled
+  const config = vscode.workspace.getConfiguration('praytime-reminder');
+  const enableSoonNotification = config.get('enableSoonNotification', true);
+  if (!enableSoonNotification) {
+    console.log('[showSoonPopup] Soon notification is disabled in settings, skipping...');
+    return;
+  }
   
-  // Use the core soon notification function
+  const soonKey = `${prayer}-soon-${now.getDate()}`;
+  
+  // Mark as triggered FIRST to prevent race condition in interval loop
+  lastSoonTriggeredPrayer = soonKey;
+  
+  const prayerName = getPrayerDisplayName(prayer);
+  const secondsLeft = Math.floor((adzanTime.getTime() - now.getTime()) / 1000);
+  const minutesLeft = Math.floor(secondsLeft / 60);
+  
+  // Use the core soon notification function with accurate seconds
   await triggerSoonNotification(
     prayerName,
     minutesLeft,
-    `${city}, ${country}`
+    `${city}, ${country}`,
+    secondsLeft
   );
-  
-  // Mark as triggered
-  lastSoonTriggeredPrayer = soonKey;
 }
 
 /**
@@ -257,6 +277,14 @@ async function showSoonPopup(prayer: string, adzanTime: Date, city: string, coun
  */
 async function playAdzanAudio() {
   try {
+    // Check if adzan sound is enabled
+    const config = vscode.workspace.getConfiguration('praytime-reminder');
+    const enableAdzanSound = config.get('enableAdzanSound', true);
+    if (!enableAdzanSound) {
+      console.log('[playAdzanAudio] Adzan sound is disabled in settings, skipping...');
+      return;
+    }
+    
     // Stop any currently playing audio first
     stopAdzanAudio();
     
@@ -395,6 +423,9 @@ export async function triggerAdzanNotification(prayerName: string, time: string,
 async function showAdzanPopup(prayer: string, adzanTime: Date, time: string, city: string, country: string, timeZone: string, now: Date) {
   const adzanKey = `${prayer}-${now.getDate()}`;
   
+  // Mark as triggered FIRST to prevent race condition in interval loop
+  lastTriggeredPrayer = adzanKey;
+  
   // Use the core adzan notification function
   await triggerAdzanNotification(
     getPrayerDisplayName(prayer),
@@ -402,9 +433,6 @@ async function showAdzanPopup(prayer: string, adzanTime: Date, time: string, cit
     `${city}, ${country}`,
     timeZone
   );
-  
-  // Mark as triggered
-  lastTriggeredPrayer = adzanKey;
 }
 
 // --- Main function ---

@@ -4,331 +4,27 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PrayTime Reminder</title>
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src https: data:; style-src 'unsafe-inline' https:; script-src 'unsafe-inline' https:; media-src vscode-resource: vscode-webview-resource: https:;">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src https: data:; style-src 'unsafe-inline' https: {{CSP_SOURCE}}; script-src 'unsafe-inline' https: {{CSP_SOURCE}}; media-src vscode-resource: vscode-webview-resource: https:;">
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
-  <style>
-    html, body { 
-      height: 100%; 
-      width: 100%; 
-      margin: 0; 
-      padding: 0; 
-      overflow-x: hidden;
-    }
-    body {
-      font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-      /* background-image: url('{{BACKGROUND_URL}}'); */
-      background-size: cover;
-      background-position: center;
-      background-attachment: fixed;
-      min-height: 100vh;
-      min-width: 100vw;
-    }
-    .overlay { 
-      background: rgba(24,24,27,0.7); 
-      position: fixed; 
-      inset: 0; 
-      z-index: 0; 
-    }
-    .prayer-hover:hover {
-      background: rgba(255,255,255,0.4) !important;
-      transition: background 0.2s;
-    }
-    .glass {
-      border-radius: 1.5rem;
-    }
-    .prayer-icon {
-      width: 1.25em;
-      margin-right: 0.5em;
-      opacity: 0.85;
-    }
-    .clock-animate {
-      animation: pulse 1.5s infinite;
-    }
-    @keyframes pulse {
-      0% { text-shadow: 0 0 0px #fff; }
-      50% { text-shadow: 0 0 12px #60a5fa, 0 0 24px #fff; }
-      100% { text-shadow: 0 0 0px #fff; }
-    }
-    
-    /* Mobile-first responsive design */
-    @media (max-width: 1279px) {
-      body {
-        font-size: 14px;
-      }
-      
-      /* Clock section for mobile/tablet */
-      .clock-section {
-        align-items: center !important;
-      }
-      
-      .clock-section > div {
-        width: 100% !important;
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: center !important;
-      }
-      
-      /* Clock with timezone aligned to center as a group for mobile */
-      .clock-section .clock-with-timezone {
-        margin-bottom: 0.75rem !important;
-        align-self: center !important;
-      }
-      
-      /* Date and location in horizontal layout for mobile */
-      .clock-section .date-location-wrapper {
-        display: flex !important;
-        flex-wrap: wrap !important;
-        gap: 0.75rem 1.5rem !important;
-        justify-content: center !important;
-        align-items: center !important;
-      }
-      
-      .clock-section .date-location-wrapper > div {
-        display: inline-flex !important;
-        align-items: center !important;
-        gap: 0.375rem !important;
-      }
-      
-      /* Smaller clock for mobile/tablet */
-      #clock {
-        font-size: 2.5rem !important;
-        line-height: 1.1 !important;
-      }
-      
-      /* Full width prayer times container for mobile/tablet */
-      .prayer-times-container {
-        overflow: visible !important;
-        max-width: 100% !important;
-      }
-      
-      /* Center "Jadwal sholat hari ini" text for mobile */
-      .prayer-times-container > .font-bold {
-        text-align: center !important;
-      }
-      
-      /* Horizontal grid prayer times for mobile/tablet */
-      .prayer-times-layout {
-        display: grid !important;
-        grid-template-columns: repeat(5, 1fr) !important;
-        gap: 0.75rem !important;
-        width: 100% !important;
-      }
-      
-      .prayer-time-item {
-        flex: 1 !important;
-        padding: 1rem 0.5rem !important;
-        margin-bottom: 0 !important;
-        text-align: center !important;
-        min-width: 0 !important;
-      }
-      
-      .prayer-time-item .flex {
-        flex-direction: column !important;
-        gap: 0.5rem !important;
-      }
-      
-      .prayer-time-item .flex span:first-child {
-        font-size: 0.875rem !important;
-        justify-content: center !important;
-        line-height: 1.2 !important;
-        font-weight: 600 !important;
-      }
-      
-      .prayer-time-item .flex span:last-child {
-        font-size: 1.125rem !important;
-        font-weight: 700 !important;
-        justify-content: center !important;
-        line-height: 1.1 !important;
-      }
-      
-      /* Make icons bigger for mobile grid */
-      .prayer-time-item svg {
-        width: 1.25rem !important;
-        height: 1.25rem !important;
-      }
-      
-      /* Hide countdown on mobile horizontal */
-      .prayer-time-item .text-xs {
-        display: none !important;
-      }
-      
-      /* Smaller icons for mobile */
-      .prayer-icon {
-        width: 1rem !important;
-        height: 1rem !important;
-      }
-      
-      /* Compact popups */
-      #adzan-popup, #adzan-soon-popup {
-        padding: 1rem !important;
-        margin: 1rem !important;
-      }
-      
-      /* Stack layout for very small screens */
-      @media (max-height: 600px) {
-        .quote-section {
-          margin-top: 1rem !important;
-          margin-bottom: 0.5rem !important;
-        }
-        
-        .quote-section .text-xl {
-          font-size: 1rem !important;
-        }
-        
-        .quote-section .text-base {
-          font-size: 0.875rem !important;
-        }
-        
-        .quote-section .text-xs {
-          font-size: 0.75rem !important;
-        }
-        
-        #clock {
-          font-size: 2rem !important;
-        }
-        
-        .prayer-times-container {
-          padding: 0.75rem !important;
-        }
-        
-        .prayer-time-item {
-          padding: 0.375rem 0.5rem !important;
-        }
-      }
-      
-      /* Ultra-narrow screens (like phone in portrait) */
-      @media (max-width: 400px) {
-        .main-content {
-          gap: 1rem !important;
-          padding: 0.5rem !important;
-        }
-        
-        .clock-section {
-          padding: 1rem !important;
-        }
-        
-        .prayer-times-container {
-          padding: 0.75rem !important;
-        }
-        
-        .prayer-times-layout {
-          gap: 0.5rem !important;
-        }
-        
-        .prayer-time-item {
-          padding: 0.75rem 0.25rem !important;
-        }
-        
-        .prayer-time-item .flex span:first-child {
-          font-size: 0.75rem !important;
-        }
-        
-        .prayer-time-item .flex span:last-child {
-          font-size: 0.875rem !important;
-        }
-        
-        .prayer-time-item svg {
-          width: 1rem !important;
-          height: 1rem !important;
-        }
-      }
-    }
-    
-    /* Desktop layout - vertical prayer times */
-    @media (min-width: 1280px) {
-      /* Clock with timezone left aligned for desktop */
-      .clock-section .clock-with-timezone {
-        justify-content: flex-start !important;
-      }
-      
-      /* Date and location vertical for desktop */
-      .clock-section .date-location-wrapper {
-        display: flex !important;
-        flex-direction: column !important;
-        gap: 0.25rem !important;
-        align-items: flex-start !important;
-        margin-top: 0.75rem !important;
-      }
-      
-      .clock-section .date-location-wrapper > div {
-        margin-top: 0 !important;
-      }
-      
-      .prayer-times-layout {
-        display: flex !important;
-        flex-direction: column !important;
-        gap: 1.5rem !important;
-      }
-      
-      .prayer-time-item {
-        flex: none !important;
-        padding: 0.75rem 1rem !important;
-        margin-bottom: 0 !important;
-        text-align: left !important;
-      }
-      
-      .prayer-time-item .flex {
-        flex-direction: row !important;
-        justify-content: space-between !important;
-        align-items: center !important;
-      }
-      
-      .prayer-time-item .flex span:first-child {
-        font-size: 1rem !important;
-        justify-content: flex-start !important;
-      }
-      
-      .prayer-time-item .flex span:last-child {
-        font-size: 1.125rem !important;
-        font-weight: 700 !important;
-        justify-content: flex-end !important;
-      }
-      
-      .prayer-time-item svg {
-        width: 1.25rem !important;
-        height: 1.25rem !important;
-      }
-      
-      .prayer-time-item .text-xs {
-        display: block !important;
-      }
-    }
-    
-    /* Landscape mobile optimization */
-    @media (max-width: 768px) and (orientation: landscape) {
-      .quote-section {
-        margin-top: 0.5rem !important;
-        margin-bottom: 0.5rem !important;
-      }
-      
-      .quote-section .text-xl {
-        font-size: 1rem !important;
-      }
-      
-      .quote-section .text-base {
-        font-size: 0.875rem !important;
-      }
-      
-      .main-content {
-        gap: 1rem !important;
-        padding: 0.5rem !important;
-        min-height: auto !important;
-      }
-      
-      #clock {
-        font-size: 2rem !important;
-      }
-    }
-  </style>
+  <link rel="stylesheet" href="{{CSS_URL}}">
 </head>
 <body class="min-h-screen w-full flex flex-col relative" data-next-prayer="{{NEXT_PRAYER_KEY}}">
   <div class="overlay"></div>
+  
+  <!-- Settings Icon - Fixed Top Right -->
+  <button id="settings-btn" class="fixed top-2 right-2 sm:top-3 sm:right-3 md:top-4 md:right-4 z-[1000] bg-black/30 hover:bg-black/50 backdrop-blur-md rounded-full p-2 sm:p-2.5 md:p-3 transition-all shadow-lg" title="Pengaturan">
+    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 sm:w-5 sm:h-5 md:w-6 md:h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+      <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+    </svg>
+  </button>
+  
   <div class="relative z-10 flex flex-col items-center w-full min-h-screen">
     <!-- Kutipan ayat - responsive -->
-    <div class="quote-section flex flex-col items-center mt-4 sm:mt-8 md:mt-12 lg:mt-16 px-3 sm:px-4">
+    <div class="quote-section flex flex-col items-center mt-12 sm:mt-8 md:mt-12 lg:mt-16 px-3 sm:px-4">
       <div class="text-lg sm:text-xl md:text-2xl lg:text-3xl text-white font-bold mb-1 sm:mb-2 text-center leading-tight" data-quote-arabic>{{QUOTE_ARABIC}}</div>
       <div class="text-sm sm:text-base md:text-lg lg:text-xl text-white mb-1 text-center leading-tight" data-quote-translation>{{QUOTE_TRANSLATION}}</div>
       <div class="text-xs sm:text-sm md:text-base text-gray-300 text-center mb-3 sm:mb-4 md:mb-6" data-quote-source>{{QUOTE_SOURCE}}</div>
@@ -443,6 +139,58 @@
       </div>
     </div>
   </div>
+  
+  <!-- Settings Popup -->
+  <div id="settings-popup" class="fixed inset-0 z-[60000] flex items-center justify-center p-4" style="display:none; background:rgba(24,24,27,0.85);">
+    <div class="backdrop-blur-xl bg-white/90 border border-white/40 shadow-2xl rounded-2xl sm:rounded-3xl px-4 sm:px-6 md:px-8 py-4 sm:py-6 md:py-7 max-w-[95vw] w-full max-w-md flex flex-col text-left relative">
+      <!-- Header -->
+      <div class="flex items-center justify-between mb-4 sm:mb-5">
+        <div class="flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+          <h2 class="text-xl sm:text-2xl font-bold text-gray-800">Pengaturan</h2>
+        </div>
+        <button id="settings-popup-close" class="text-gray-400 hover:text-gray-600 transition">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      
+      <!-- Settings Items -->
+      <div class="space-y-4">
+        <!-- Adzan Sound Toggle -->
+        <div class="flex items-center justify-between py-3 border-b border-gray-200">
+          <div class="flex-1 mr-3">
+            <div class="text-base sm:text-lg font-semibold text-gray-800 mb-1">Suara Adzan</div>
+            <div class="text-xs sm:text-sm text-gray-500">Putar suara adzan saat waktu sholat tiba</div>
+          </div>
+          <button id="toggle-adzan-sound" class="relative inline-flex h-7 w-14 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 bg-green-500" role="switch" aria-checked="true">
+            <span class="pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out translate-x-7"></span>
+          </button>
+        </div>
+        
+        <!-- Soon Notification Toggle -->
+        <div class="flex items-center justify-between py-3 border-b border-gray-200">
+          <div class="flex-1 mr-3">
+            <div class="text-base sm:text-lg font-semibold text-gray-800 mb-1">Notifikasi 5 Menit</div>
+            <div class="text-xs sm:text-sm text-gray-500">Tampilkan notifikasi 5 menit sebelum adzan</div>
+          </div>
+          <button id="toggle-soon-notification" class="relative inline-flex h-7 w-14 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 bg-green-500" role="switch" aria-checked="true">
+            <span class="pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out translate-x-7"></span>
+          </button>
+        </div>
+      </div>
+      
+      <!-- Footer -->
+      <div class="mt-6">
+        <button id="settings-done-btn" class="w-full py-2.5 sm:py-3 rounded-lg sm:rounded-xl bg-green-500 hover:bg-green-600 text-white font-bold text-base sm:text-lg shadow-lg transition">Selesai</button>
+      </div>
+    </div>
+  </div>
+  
   <!-- Soon Popup (5 min before) - Lower z-index -->
   <div id="adzan-soon-popup" class="fixed inset-0 z-[50000] flex items-center justify-center p-4" style="display:none; background:rgba(24,24,27,0.18);">
     <div class="backdrop-blur-xl bg-white/80 border border-white/40 shadow-2xl rounded-2xl sm:rounded-3xl px-4 sm:px-6 md:px-8 py-4 sm:py-6 md:py-7 max-w-[95vw] w-full max-w-sm flex flex-col items-center text-center relative">
@@ -471,202 +219,8 @@
       <button id="adzan-popup-close" class="w-full py-2 rounded-lg sm:rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-500 font-semibold text-sm sm:text-base transition">Tutup</button>
     </div>
   </div>
+  
   <audio id="adzan-audio" src="{{ADZAN_AUDIO_URL}}"></audio>
-  <script>
-    console.log('Webview JS loaded');
-    function updateClock() {
-      const now = new Date();
-      const h = String(now.getHours()).padStart(2, '0');
-      const m = String(now.getMinutes()).padStart(2, '0');
-      const s = String(now.getSeconds()).padStart(2, '0');
-      document.getElementById('clock').textContent = `${h}:${m}:${s}`;
-    }
-    setInterval(updateClock, 1000);
-    updateClock();
-
-    function updateCountdown(id, targetTime) {
-      const now = new Date();
-      const [h, m] = targetTime.split(':').map(Number);
-      let target = new Date(now);
-      target.setHours(h, m, 0, 0);
-      let text = '';
-      let diffMs = target - now;
-      if (diffMs > 0) {
-        // Belum masuk waktu
-        const diffMin = Math.floor(diffMs / 60000);
-        const jam = Math.floor(diffMin / 60);
-        const menit = diffMin % 60;
-        if (jam > 0) text = `Sekitar ${jam} jam ${menit} menit lagi`;
-        else if (menit > 0) text = `Sekitar ${menit} menit lagi`;
-        else text = 'Sekitar 1 menit lagi';
-      } else {
-        // Sudah masuk waktu, cek apakah masih dalam 15 menit setelah waktu sholat
-        const afterMs = now - target;
-        if (afterMs <= 15 * 60 * 1000) {
-          text = 'Sudah masuk waktu';
-        } else {
-          // Setelah 15 menit, set target ke besok untuk countdown berikutnya
-          target.setDate(target.getDate() + 1);
-          diffMs = target - now;
-          const diffMin = Math.floor(diffMs / 60000);
-          const jam = Math.floor(diffMin / 60);
-          const menit = diffMin % 60;
-          if (jam > 0) text = `Sekitar ${jam} jam ${menit} menit lagi`;
-          else if (menit > 0) text = `Sekitar ${menit} menit lagi`;
-          else text = 'Sekitar 1 menit lagi';
-        }
-      }
-      document.getElementById(id).textContent = text;
-    }
-
-    function updateAllCountdowns() {
-      const nextPrayer = document.body.dataset.nextPrayer;
-      const ids = ['subuh', 'dzuhur', 'ashar', 'maghrib', 'isya'];
-      ids.forEach(prayer => {
-        const el = document.getElementById('countdown-' + prayer);
-        if (!el) return;
-        if (prayer === nextPrayer) {
-          updateCountdown('countdown-' + prayer, el.dataset.time);
-        } else {
-          el.textContent = '';
-        }
-      });
-    }
-    setInterval(updateAllCountdowns, 1000);
-    updateAllCountdowns();
-
-    const audio = document.getElementById('adzan-audio');
-
-    function getPrayerIcon(prayerName) {
-      switch ((prayerName||'').toLowerCase()) {
-        case 'subuh':
-          return `<svg xmlns='http://www.w3.org/2000/svg' class='w-24 h-24 mx-auto text-blue-400' fill='none' viewBox='0 0 64 64'><circle cx='32' cy='40' r='14' fill='#60a5fa'/><path d='M32 8v8M32 56v-4M8 40h8M56 40h-8M16.93 23.07l5.66 5.66M47.07 23.07l-5.66 5.66' stroke='#60a5fa' stroke-width='3' stroke-linecap='round'/></svg>`;
-        case 'dzuhur':
-          return `<svg xmlns='http://www.w3.org/2000/svg' class='w-24 h-24 mx-auto text-yellow-400' fill='none' viewBox='0 0 64 64'><circle cx='32' cy='32' r='16' fill='#facc15'/><path d='M32 8v8M32 56v-8M8 32h8M56 32h-8M16.93 16.93l5.66 5.66M47.07 16.93l-5.66 5.66M16.93 47.07l5.66-5.66M47.07 47.07l-5.66-5.66' stroke='#facc15' stroke-width='3' stroke-linecap='round'/></svg>`;
-        case 'ashar':
-          return `<svg xmlns='http://www.w3.org/2000/svg' class='w-24 h-24 mx-auto text-orange-400' fill='none' viewBox='0 0 64 64'><circle cx='44' cy='44' r='12' fill='#fb923c'/><ellipse cx='32' cy='52' rx='20' ry='4' fill='#fde68a'/></svg>`;
-        case 'maghrib':
-          return `<svg xmlns='http://www.w3.org/2000/svg' class='w-24 h-24 mx-auto text-pink-400' fill='none' viewBox='0 0 64 64'><circle cx='48' cy='48' r='10' fill='#f472b6'/><path d='M8 56c8-8 40-8 48 0' stroke='#f472b6' stroke-width='3' stroke-linecap='round'/></svg>`;
-        case 'isya':
-          return `<svg xmlns='http://www.w3.org/2000/svg' class='w-24 h-24 mx-auto text-indigo-400' fill='none' viewBox='0 0 64 64'><path d='M44 32a16 16 0 1 1-16-16 12 12 0 0 0 16 16z' fill='#818cf8'/><circle cx='48' cy='20' r='3' fill='#fbbf24'/></svg>`;
-        default:
-          return `<svg xmlns='http://www.w3.org/2000/svg' class='w-24 h-24 mx-auto text-gray-400' fill='none' viewBox='0 0 64 64'><circle cx='32' cy='32' r='16' fill='#a3a3a3'/></svg>`;
-      }
-    }
-
-    function showAdzanPopup({ prayerName, time, location, timeZone }) {
-      // Hide soon popup if it's showing (adzan popup takes priority)
-      document.getElementById('adzan-soon-popup').style.display = 'none';
-      if (adzanSoonCountdownInterval) {
-        clearInterval(adzanSoonCountdownInterval);
-        adzanSoonCountdownInterval = null;
-      }
-      
-      // Show adzan popup
-      document.getElementById('adzan-popup-icon').innerHTML = getPrayerIcon(prayerName);
-      document.getElementById('adzan-popup-title').textContent = `Saatnya adzan ${prayerName} untuk wilayah ${location} dan sekitarnya.`;
-      document.getElementById('adzan-popup-time').textContent = time;
-      document.getElementById('adzan-popup-tz').textContent = timeZone || '';
-      document.getElementById('adzan-popup-location').textContent = '';
-      document.getElementById('adzan-popup').style.display = 'flex';
-    }
-    function hideAdzanPopup() {
-      document.getElementById('adzan-popup').style.display = 'none';
-      
-      // Send message to extension to stop adzan audio
-      if (window.acquireVsCodeApi) {
-        const vscode = acquireVsCodeApi();
-        vscode.postMessage({ stopAdzan: true });
-      }
-    }
-    document.getElementById('adzan-popup-close').onclick = hideAdzanPopup;
-    document.getElementById('adzan-popup-play').onclick = function() {
-      // Audio already auto-playing from extension
-      // Just close the popup
-      hideAdzanPopup();
-    };
-
-    let adzanSoonCountdownInterval = null;
-    function showAdzanSoonPopup({ prayerName, location, secondsLeft, timeZone }) {
-      document.getElementById('adzan-soon-popup-icon').innerHTML = getPrayerIcon(prayerName);
-      document.getElementById('adzan-soon-popup-title').textContent = `Sebentar lagi menuju adzan ${prayerName} untuk wilayah ${location} dan sekitarnya.`;
-      document.getElementById('adzan-soon-popup-tz').textContent = timeZone || '';
-      document.getElementById('adzan-soon-popup-location').textContent = '';
-      function updateCountdown() {
-        const min = Math.floor(secondsLeft / 60);
-        const sec = secondsLeft % 60;
-        document.getElementById('adzan-soon-popup-countdown').textContent = `${min}:${sec.toString().padStart(2, '0')}`;
-        if (secondsLeft <= 0) {
-          clearInterval(adzanSoonCountdownInterval);
-          adzanSoonCountdownInterval = null;
-          document.getElementById('adzan-soon-popup').style.display = 'none';
-        }
-        secondsLeft--;
-      }
-      if (adzanSoonCountdownInterval) clearInterval(adzanSoonCountdownInterval);
-      updateCountdown();
-      adzanSoonCountdownInterval = setInterval(updateCountdown, 1000);
-      document.getElementById('adzan-soon-popup').style.display = 'flex';
-    }
-    document.getElementById('adzan-soon-popup-close').onclick = function() {
-      document.getElementById('adzan-soon-popup').style.display = 'none';
-      if (adzanSoonCountdownInterval) clearInterval(adzanSoonCountdownInterval);
-      adzanSoonCountdownInterval = null;
-    };
-
-    // Listen for showAdzanPopup message from extension
-    window.addEventListener('message', event => {
-      console.log('Received message:', event.data);
-      if (event.data && event.data.showAdzanPopup) {
-        showAdzanPopup(event.data);
-      }
-      if (event.data && event.data.playAdzan) {
-        audio.currentTime = 0;
-        audio.play().then(() => {
-          console.log('Adzan audio played:', audio.src);
-        }).catch(err => {
-          // Error is silently ignored
-          console.error('Adzan audio error:', err, 'src:', audio.src);
-        });
-      }
-      if (event.data && event.data.showAdzanSoonPopup) {
-        showAdzanSoonPopup(event.data);
-      }
-    });
-
-    // Handshake: notify extension when webview is ready
-    window.addEventListener('DOMContentLoaded', () => {
-      console.log('DOMContentLoaded');
-      if (window.acquireVsCodeApi) {
-        const vscode = acquireVsCodeApi();
-        vscode.postMessage({ ready: true });
-      } else {
-        console.log('acquireVsCodeApi is not defined');
-      }
-    });
-
-    // --- Random background & quote rotation ---
-    function pickRandom(arr) {
-      return arr[Math.floor(Math.random() * arr.length)];
-    }
-    function updateRandomBgAndQuote() {
-      if (window.backgrounds && window.backgrounds.length) {
-        const bg = pickRandom(window.backgrounds);
-        document.body.style.backgroundImage = `url('${bg.url}')`;
-      }
-      if (window.quotes && window.quotes.length) {
-        const q = pickRandom(window.quotes);
-        const elAr = document.querySelector('[data-quote-arabic]');
-        const elTr = document.querySelector('[data-quote-translation]');
-        const elSrc = document.querySelector('[data-quote-source]');
-        if (elAr) elAr.textContent = q.arabic;
-        if (elTr) elTr.textContent = q.translation;
-        if (elSrc) elSrc.textContent = q.source;
-      }
-    }
-    setInterval(updateRandomBgAndQuote, 60 * 1000);
-    // Panggil sekali saat load
-    updateRandomBgAndQuote();
-  </script>
+  <script src="{{JS_URL}}"></script>
 </body>
 </html>
