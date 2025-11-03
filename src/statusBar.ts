@@ -279,7 +279,7 @@ async function showSoonPopup(prayer: string, adzanTime: Date, city: string, coun
 
 /**
  * Play adzan audio from extension (not webview)
- * Uses play-sound for reliable cross-platform autoplay
+ * Uses platform-specific methods for reliable cross-platform autoplay
  */
 async function playAdzanAudio() {
   try {
@@ -297,26 +297,60 @@ async function playAdzanAudio() {
     const adzanPath = path.join(__dirname, 'assets', 'adzan-mekkah.wav');
     console.log('[playAdzanAudio] Playing adzan from:', adzanPath);
     
-    // Play audio using play-sound with ffplay options to hide window
-    currentAudioProcess = player.play(adzanPath, { 
-      // Options for ffplay to run in background without window
-      ffplay: ['-nodisp', '-autoexit', '-loglevel', 'quiet']
-    }, (err: any) => {
-      if (err) {
-        console.error('[playAdzanAudio] Error during playback:', err);
-        
-        // Try fallback to webview if extension audio fails
-        const panel = getLastWebviewPanel();
-        if (panel) {
-          panel.webview.postMessage({ playAdzan: true });
+    if (process.platform === 'win32') {
+      // Windows: Use PowerShell with WPF MediaPlayer (supports more audio formats than SoundPlayer)
+      const { exec } = require('child_process');
+      
+      // Escape path for PowerShell
+      const escapedPath = adzanPath.replace(/'/g, "''");
+      
+      // Use WPF MediaPlayer for reliable audio playback on Windows (supports various formats)
+      // MediaPlayer is part of PresentationCore.dll (WPF) which is available on all modern Windows
+      const psCommand = `powershell -Command "Add-Type -AssemblyName PresentationCore; $player = New-Object System.Windows.Media.MediaPlayer; $player.Open('${escapedPath}'); $player.Play(); Start-Sleep -Seconds 90; $player.Close()"`;
+      
+      console.log('[playAdzanAudio] Using Windows WPF MediaPlayer');
+      
+      currentAudioProcess = exec(psCommand, (error: any, stdout: any, stderr: any) => {
+        if (error) {
+          console.error('[playAdzanAudio] PowerShell MediaPlayer error:', error);
+          console.error('[playAdzanAudio] stderr:', stderr);
+          
+          // If MediaPlayer fails, show notification to user
+          vscode.window.showWarningMessage(
+            '⚠️ Tidak dapat memutar audio adzan. Pastikan Windows Media Feature Pack terinstall.',
+            'OK'
+          );
+        } else {
+          console.log('[playAdzanAudio] Windows audio finished playing');
         }
-      } else {
-        console.log('[playAdzanAudio] Adzan audio finished playing');
-      }
-      currentAudioProcess = null;
-    });
-    
-    console.log('[playAdzanAudio] Adzan audio started successfully');
+        currentAudioProcess = null;
+      });
+      
+      console.log('[playAdzanAudio] Windows audio started successfully');
+    } else {
+      // Linux/macOS: Use play-sound with ffplay/aplay
+      const playerOptions: any = {
+        ffplay: ['-nodisp', '-autoexit', '-loglevel', 'quiet']
+      };
+      
+      currentAudioProcess = player.play(adzanPath, playerOptions, (err: any) => {
+        if (err) {
+          console.error('[playAdzanAudio] Error during playback:', err);
+          
+          // Try fallback to webview if extension audio fails
+          const panel = getLastWebviewPanel();
+          if (panel) {
+            panel.webview.postMessage({ playAdzan: true });
+            console.log('[playAdzanAudio] Falling back to webview audio');
+          }
+        } else {
+          console.log('[playAdzanAudio] Adzan audio finished playing');
+        }
+        currentAudioProcess = null;
+      });
+      
+      console.log('[playAdzanAudio] Adzan audio started successfully');
+    }
   } catch (error) {
     console.error('[playAdzanAudio] Error playing adzan:', error);
     
@@ -352,11 +386,10 @@ export function stopAdzanAudio() {
       currentAudioProcess = null;
     }
     
-    // Nuclear option: Kill all audio player processes by name
-    const playersToKill = ['ffplay', 'aplay', 'mplayer', 'mpg123', 'mpg321', 'cvlc'];
-    
+    // Platform-specific cleanup
     if (process.platform === 'linux' || process.platform === 'darwin') {
-      // Linux/macOS: Use pkill
+      // Linux/macOS: Kill audio player processes
+      const playersToKill = ['ffplay', 'aplay', 'mplayer', 'mpg123', 'mpg321', 'cvlc'];
       playersToKill.forEach(playerName => {
         try {
           execSync(`pkill -9 ${playerName}`, { stdio: 'ignore' });
@@ -366,11 +399,20 @@ export function stopAdzanAudio() {
         }
       });
     } else if (process.platform === 'win32') {
-      // Windows: Use taskkill
+      // Windows: Kill PowerShell processes running SoundPlayer
+      // This will stop any audio being played via PowerShell
+      try {
+        execSync('powershell -Command "Get-Process | Where-Object {$_.MainWindowTitle -eq \'\' -and $_.ProcessName -eq \'powershell\'} | Stop-Process -Force"', { stdio: 'ignore' });
+        console.log(`[stopAdzanAudio] ✅ Killed PowerShell audio processes (Windows)`);
+      } catch (e) {
+        // No process found or error, continue
+      }
+      
+      // Also try to kill any ffplay if it was used
+      const playersToKill = ['ffplay', 'mplayer', 'mpg123', 'mpg321'];
       playersToKill.forEach(playerName => {
         try {
           execSync(`taskkill /F /IM ${playerName}.exe`, { stdio: 'ignore' });
-          console.log(`[stopAdzanAudio] ✅ Killed ${playerName} processes (Windows)`);
         } catch (e) {
           // No process found, continue
         }

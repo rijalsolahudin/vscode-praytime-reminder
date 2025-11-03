@@ -69,8 +69,8 @@
     }
   },
   "scripts": {
-    "copy-assets": "mkdir -p out/assets && cp src/assets/*.json out/assets/ && cp src/assets/adzan-mekkah.wav out/assets/ || true",
-    "copy-webview": "mkdir -p out/webview && cp src/webview/webview.html out/webview/ && cp src/webview/webview.css out/webview/ && cp src/webview/webview.js out/webview/",
+    "copy-assets": "node -e \"const fs=require('fs');const path=require('path');const dir='out/assets';if(!fs.existsSync(dir))fs.mkdirSync(dir,{recursive:true});['backgrounds.json','quotes.json','adzan-mekkah.wav'].forEach(f=>fs.copyFileSync(path.join('src','assets',f),path.join(dir,f)))\"",
+    "copy-webview": "node -e \"const fs=require('fs');const path=require('path');const dir='out/webview';if(!fs.existsSync(dir))fs.mkdirSync(dir,{recursive:true});['webview.html','webview.css','webview.js'].forEach(f=>fs.copyFileSync(path.join('src','webview',f),path.join(dir,f)))\"",
     "compile": "tsc -p ./ && pnpm run copy-assets && pnpm run copy-webview",
     "watch": "tsc -watch -p ./",
     "pretest": "pnpm run compile && pnpm run lint",
