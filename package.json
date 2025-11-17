@@ -69,7 +69,7 @@
     }
   },
   "scripts": {
-    "copy-assets": "node -e \"const fs=require('fs');const path=require('path');const dir='out/assets';if(!fs.existsSync(dir))fs.mkdirSync(dir,{recursive:true});['backgrounds.json','quotes.json','adzan-mekkah.wav'].forEach(f=>fs.copyFileSync(path.join('src','assets',f),path.join(dir,f)))\"",
+    "copy-assets": "node -e \"const fs=require('fs');const path=require('path');const dir='out/assets';if(!fs.existsSync(dir))fs.mkdirSync(dir,{recursive:true});['backgrounds.json','quotes.json','adzan-mekkah.mp3'].forEach(f=>fs.copyFileSync(path.join('src','assets',f),path.join(dir,f)))\"",
     "copy-webview": "node -e \"const fs=require('fs');const path=require('path');const dir='out/webview';if(!fs.existsSync(dir))fs.mkdirSync(dir,{recursive:true});['webview.html','webview.css','webview.js'].forEach(f=>fs.copyFileSync(path.join('src','webview',f),path.join(dir,f)))\"",
     "compile": "tsc -p ./ && pnpm run copy-assets && pnpm run copy-webview",
     "watch": "tsc -watch -p ./",

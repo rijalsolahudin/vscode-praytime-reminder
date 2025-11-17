@@ -294,7 +294,7 @@ async function playAdzanAudio() {
     // Stop any currently playing audio first
     stopAdzanAudio();
     
-    const adzanPath = path.join(__dirname, 'assets', 'adzan-mekkah.wav');
+    const adzanPath = path.join(__dirname, 'assets', 'adzan-mekkah.mp3');
     console.log('[playAdzanAudio] Playing adzan from:', adzanPath);
     
     if (process.platform === 'win32') {
